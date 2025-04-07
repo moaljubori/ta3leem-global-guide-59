@@ -1,3 +1,4 @@
+
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ const BlogPreviewSection = () => {
       excerpt: "كل ما تحتاج معرفته عن متطلبات وإجراءات الحصول على تأشيرة الدراسة في المملكة المتحدة...",
       category: "التأشيرات",
       date: "8 مارس 2025",
-      image: "https://images.unsplash.com/photo-1526656892012-7b336603ed46?ixlib=rb-4.0.3",
+      image: "/lovable-uploads/894b3b71-fe87-4b26-8f97-862af30a866f.png",
     },
   ];
 
