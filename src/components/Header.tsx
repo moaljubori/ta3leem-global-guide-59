@@ -7,6 +7,14 @@ import { GlobeIcon, MenuIcon, X } from "lucide-react";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const scrollToConsultation = () => {
+    const consultationSection = document.getElementById('consultation-form');
+    if (consultationSection) {
+      consultationSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
+  };
+
   return (
     <header className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -23,6 +31,9 @@ const Header = () => {
           <Link to="/about" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
             من نحن
           </Link>
+          <Link to="/services" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
+            خدماتنا
+          </Link>
           <Link to="/countries" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
             الدول
           </Link>
@@ -32,7 +43,10 @@ const Header = () => {
           <Link to="/contact" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
             اتصل بنا
           </Link>
-          <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+          <Button 
+            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+            onClick={scrollToConsultation}
+          >
             طلب استشارة
           </Button>
         </nav>
@@ -66,6 +80,13 @@ const Header = () => {
               من نحن
             </Link>
             <Link 
+              to="/services" 
+              className="text-gray-800 font-medium py-2 hover:text-blue-500"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              خدماتنا
+            </Link>
+            <Link 
               to="/countries" 
               className="text-gray-800 font-medium py-2 hover:text-blue-500"
               onClick={() => setIsMenuOpen(false)}
@@ -86,7 +107,10 @@ const Header = () => {
             >
               اتصل بنا
             </Link>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full">
+            <Button 
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full"
+              onClick={scrollToConsultation}
+            >
               طلب استشارة
             </Button>
           </div>

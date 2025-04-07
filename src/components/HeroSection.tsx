@@ -34,9 +34,11 @@ const HeroSection = () => {
             >
               طلب استشارة مجانية
             </Button>
-            <Button variant="outline" size="lg" className="bg-transparent border-white hover:bg-white/10 text-white font-bold text-lg py-6 px-8">
-              تعرف على خدماتنا
-            </Button>
+            <Link to="/services">
+              <Button variant="outline" size="lg" className="bg-transparent border-white hover:bg-white/10 text-white font-bold text-lg py-6 px-8">
+                تعرف على خدماتنا
+              </Button>
+            </Link>
           </div>
           
           <div className="mt-12 flex flex-wrap justify-center gap-8">
