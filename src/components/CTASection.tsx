@@ -103,7 +103,7 @@ const CTASection = () => {
             </Button>
           </div>
 
-          <div className="max-w-md mx-auto">
+          <div id="consultation-form" className="max-w-md mx-auto">
             {isSubmitted ? (
               <div className="bg-green-600/20 backdrop-blur-lg p-8 rounded-lg shadow-lg text-center">
                 <CheckCircle className="w-16 h-16 mx-auto text-green-400 mb-4" />
@@ -170,7 +170,7 @@ const CTASection = () => {
                     className="w-full p-3 rounded-md bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-gold-400 resize-none"
                   ></textarea>
                 </div>
-                <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-blue-900 font-bold py-3 text-lg">
+                <Button type="submit" className="w-full bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold py-3 text-lg">
                   طلب استشارة مجانية
                 </Button>
               </form>
