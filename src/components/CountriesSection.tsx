@@ -1,9 +1,10 @@
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const CountriesSection = () => {
-  const countries = [
+  const [countries, setCountries] = useState([
     {
       id: "canada",
       name: "كندا",
@@ -28,7 +29,27 @@ const CountriesSection = () => {
       universities: 84,
       studentsHelped: 310,
     },
-  ];
+  ]);
+
+  // Load countries from localStorage if available (admin edited content)
+  useEffect(() => {
+    const storedCountries = localStorage.getItem("adminCountriesData");
+    if (storedCountries) {
+      try {
+        const parsedData = JSON.parse(storedCountries);
+        // Map to ensure we have the right fields
+        const validatedData = parsedData.map(country => ({
+          ...country,
+          universities: country.universities || 50,
+          studentsHelped: country.studentsHelped || 200,
+          flag: country.flag || "🌍" // Default flag if not available
+        }));
+        setCountries(validatedData);
+      } catch (error) {
+        console.error("Error parsing countries data:", error);
+      }
+    }
+  }, []);
 
   return (
     <section className="py-20 bg-gray-50" id="countries">

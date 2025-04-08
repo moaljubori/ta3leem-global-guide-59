@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Countries = () => {
-  const countries = [
+  // State to store countries data from local storage
+  const [countries, setCountries] = useState([
     {
       id: "canada",
       name: "كندا",
@@ -49,7 +51,26 @@ const Countries = () => {
       ],
       image: "https://images.unsplash.com/photo-1505761671935-60b3a7427bad?ixlib=rb-4.0.3"
     }
-  ];
+  ]);
+
+  // Load countries from localStorage if available (admin edited content)
+  useEffect(() => {
+    const storedCountries = localStorage.getItem("adminCountriesData");
+    if (storedCountries) {
+      try {
+        const parsedData = JSON.parse(storedCountries);
+        // Make sure we have benefits array for each country, or provide default
+        const validatedData = parsedData.map(country => ({
+          ...country,
+          benefits: country.benefits || ["جودة تعليمية عالية", "فرص مهنية", "بيئة متنوعة ثقافياً"],
+          flag: country.flag || "🌍" // Default flag if not available
+        }));
+        setCountries(validatedData);
+      } catch (error) {
+        console.error("Error parsing countries data:", error);
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
