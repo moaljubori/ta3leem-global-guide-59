@@ -48,7 +48,7 @@ const BlogPreviewSection = () => {
             <Link 
               to={`/blog/${post.id}`} 
               key={post.id}
-              className="group bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow"
+              className="group bg-white rounded-xl overflow-hidden shadow hover:shadow-xl transition-all duration-300"
             >
               <div className="h-48 overflow-hidden">
                 <img
@@ -59,7 +59,7 @@ const BlogPreviewSection = () => {
               </div>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-3">
-                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
                     {post.category}
                   </span>
                   <span className="text-sm text-gray-500">{post.date}</span>
@@ -70,7 +70,7 @@ const BlogPreviewSection = () => {
                 <p className="text-gray-600 mb-4">{post.excerpt}</p>
                 <div className="flex items-center text-blue-600 font-medium">
                   <span>اقرأ المزيد</span>
-                  <ArrowLeft className="w-4 h-4 mr-2 group-hover:mr-1 transition-all" />
+                  <ArrowLeft className="w-4 h-4 mr-2 group-hover:translate-x-[-4px] transition-all" />
                 </div>
               </div>
             </Link>
