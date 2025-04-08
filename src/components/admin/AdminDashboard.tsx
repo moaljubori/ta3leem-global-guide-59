@@ -75,11 +75,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       {/* Mobile sidebar */}
       <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" className="md:hidden p-2">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
         <SheetContent side="left" className="w-[240px] sm:w-[240px]">
           <div className="px-2 py-6">
             <h1 className="text-xl font-bold text-blue-800 mb-6">Admin Panel</h1>
@@ -116,11 +111,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         {/* Top navbar */}
         <header className="bg-white border-b border-gray-200 flex items-center justify-between p-4">
           <div className="flex items-center">
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
             <h1 className="text-xl font-semibold text-gray-800 md:hidden">Admin Panel</h1>
           </div>
           
