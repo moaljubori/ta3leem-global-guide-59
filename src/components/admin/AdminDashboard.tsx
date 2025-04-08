@@ -8,13 +8,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { 
   Menu, Settings, Home, Book, MessagesSquare, 
-  LogOut, User, Bell, Search
+  LogOut, User, Bell, Search, Layout, Code
 } from "lucide-react";
 
 import AdminHome from "./sections/AdminHome";
 import AdminBlog from "./sections/AdminBlog";
 import AdminConsultations from "./sections/AdminConsultations";
 import AdminSettings from "./sections/AdminSettings";
+import AdminSiteContent from "./sections/AdminSiteContent";
+import AdminAdvancedSettings from "./sections/AdminAdvancedSettings";
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -28,6 +30,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { name: "Dashboard", path: "/admin/dashboard", icon: Home },
     { name: "Blog Posts", path: "/admin/blog", icon: Book },
     { name: "Consultations", path: "/admin/consultations", icon: MessagesSquare },
+    { name: "Site Content", path: "/admin/content", icon: Layout },
+    { name: "Advanced Settings", path: "/admin/advanced-settings", icon: Code },
     { name: "Settings", path: "/admin/settings", icon: Settings },
   ];
 
@@ -138,6 +142,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <Route path="/dashboard" element={<AdminHome />} />
             <Route path="/blog" element={<AdminBlog />} />
             <Route path="/consultations" element={<AdminConsultations />} />
+            <Route path="/content" element={<AdminSiteContent />} />
+            <Route path="/advanced-settings" element={<AdminAdvancedSettings />} />
             <Route path="/settings" element={<AdminSettings />} />
             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>

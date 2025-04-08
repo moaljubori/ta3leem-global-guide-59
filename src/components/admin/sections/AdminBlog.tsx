@@ -10,15 +10,31 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Table, TableBody, TableCell, TableHead, 
   TableHeader, TableRow 
 } from "@/components/ui/table";
 import { 
   Plus, Search, Edit, Trash, 
-  ArrowLeft, ArrowRight 
+  ArrowLeft, ArrowRight, Tag
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 // Mock blog posts data
 const mockBlogPosts = [
@@ -26,6 +42,7 @@ const mockBlogPosts = [
     id: 1,
     title: "أفضل 10 جامعات في كندا للطلاب الدوليين",
     category: "كندا",
+    content: "محتوى المقالة عن الجامعات الكندية وفرصها للطلاب الدوليين...",
     date: "21 مارس 2025",
     published: true,
   },
@@ -33,6 +50,7 @@ const mockBlogPosts = [
     id: 2,
     title: "كيف تحصل على منحة دراسية في الولايات المتحدة",
     category: "المنح الدراسية",
+    content: "محتوى المقالة عن كيفية الحصول على منح دراسية في الولايات المتحدة...",
     date: "15 مارس 2025",
     published: true,
   },
@@ -40,6 +58,7 @@ const mockBlogPosts = [
     id: 3,
     title: "دليل شامل للتأشيرة الدراسية البريطانية",
     category: "التأشيرات",
+    content: "محتوى المقالة عن طريقة الحصول على التأشيرة الدراسية البريطانية...",
     date: "8 مارس 2025",
     published: true,
   },
@@ -47,6 +66,7 @@ const mockBlogPosts = [
     id: 4,
     title: "نصائح للدراسة في ألمانيا",
     category: "ألمانيا",
+    content: "محتوى المقالة عن نصائح مفيدة للطلاب الراغبين بالدراسة في ألمانيا...",
     date: "1 مارس 2025",
     published: false,
   },
@@ -54,21 +74,30 @@ const mockBlogPosts = [
     id: 5,
     title: "مقارنة بين الدراسة في أستراليا ونيوزيلندا",
     category: "أستراليا",
+    content: "محتوى المقالة عن مقارنة بين نظام التعليم في أستراليا ونيوزيلندا...",
     date: "25 فبراير 2025",
     published: true,
   },
 ];
 
 // Mock categories
-const categories = ["كندا", "المنح الدراسية", "التأشيرات", "ألمانيا", "أستراليا"];
+const initialCategories = ["كندا", "المنح الدراسية", "التأشيرات", "ألمانيا", "أستراليا"];
 
 const AdminBlog = () => {
   const [posts, setPosts] = useState(mockBlogPosts);
+  const [categories, setCategories] = useState(initialCategories);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [isEditing, setIsEditing] = useState(false);
   const [currentPost, setCurrentPost] = useState<any>(null);
+  const [currentTab, setCurrentTab] = useState<string>("posts");
+  
+  // Category management state
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [currentCategory, setCurrentCategory] = useState("");
+  const [categoryToEdit, setCategoryToEdit] = useState("");
+  
   const { toast } = useToast();
 
   // Filter posts based on search query
@@ -121,6 +150,7 @@ const AdminBlog = () => {
       id: Date.now(),
       title: "",
       category: "",
+      content: "",
       date: new Date().toLocaleDateString("ar-EG", { 
         year: 'numeric', month: 'long', day: 'numeric'
       }),
@@ -131,10 +161,94 @@ const AdminBlog = () => {
     setIsEditing(true);
   };
 
+  // Category management functions
+  const handleAddCategory = () => {
+    if (!currentCategory.trim()) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء إدخال اسم الفئة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (categories.includes(currentCategory)) {
+      toast({
+        title: "خطأ",
+        description: "هذه الفئة موجودة بالفعل",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCategories([...categories, currentCategory]);
+    setCurrentCategory("");
+    
+    toast({
+      title: "تمت الإضافة بنجاح",
+      description: "تمت إضافة الفئة بنجاح",
+    });
+  };
+
+  const handleEditCategory = (category: string) => {
+    setCategoryToEdit(category);
+    setCurrentCategory(category);
+    setIsEditingCategory(true);
+  };
+
+  const handleSaveCategory = () => {
+    if (!currentCategory.trim()) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء إدخال اسم الفئة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCategories(categories.map(cat => 
+      cat === categoryToEdit ? currentCategory : cat
+    ));
+    
+    // Update category in posts
+    setPosts(posts.map(post => 
+      post.category === categoryToEdit 
+        ? { ...post, category: currentCategory }
+        : post
+    ));
+
+    setCurrentCategory("");
+    setIsEditingCategory(false);
+    setCategoryToEdit("");
+    
+    toast({
+      title: "تم التعديل بنجاح",
+      description: "تم تعديل الفئة بنجاح",
+    });
+  };
+
+  const handleDeleteCategory = (category: string) => {
+    if (window.confirm("هل أنت متأكد من حذف هذه الفئة؟ سيتم إزالة الفئة من جميع المقالات المرتبطة بها.")) {
+      setCategories(categories.filter(cat => cat !== category));
+      
+      // Update posts that used this category
+      setPosts(posts.map(post => 
+        post.category === category 
+          ? { ...post, category: "" }
+          : post
+      ));
+
+      toast({
+        title: "تم الحذف بنجاح",
+        description: "تم حذف الفئة بنجاح",
+      });
+    }
+  };
+
   // If editing or creating a post
   if (isEditing) {
     return (
-      <Card className="max-w-2xl mx-auto">
+      <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>
             {currentPost.id ? "تحرير المقالة" : "إنشاء مقالة جديدة"}
@@ -175,6 +289,19 @@ const AdminBlog = () => {
               </select>
             </div>
             
+            <div className="space-y-2">
+              <label htmlFor="content" className="text-sm font-medium">
+                المحتوى
+              </label>
+              <Textarea
+                id="content"
+                value={currentPost.content}
+                onChange={e => setCurrentPost({...currentPost, content: e.target.value})}
+                rows={10}
+                required
+              />
+            </div>
+            
             <div className="flex items-center space-x-2 rtl:space-x-reverse">
               <input
                 type="checkbox"
@@ -205,111 +332,212 @@ const AdminBlog = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">إدارة المدونة</h1>
-        <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          مقالة جديدة
-        </Button>
-      </div>
-      
-      {/* Search and filter */}
-      <div className="relative">
-        <Search className="h-4 w-4 absolute top-3 left-3 text-gray-400" />
-        <Input
-          placeholder="البحث عن المقالات..."
-          className="pl-10"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-      
-      {/* Blog posts table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>العنوان</TableHead>
-                <TableHead>الفئة</TableHead>
-                <TableHead>التاريخ</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead className="text-right">الإجراءات</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentPosts.map((post) => (
-                <TableRow key={post.id}>
-                  <TableCell className="font-medium">{post.title}</TableCell>
-                  <TableCell>{post.category}</TableCell>
-                  <TableCell>{post.date}</TableCell>
-                  <TableCell>
-                    <span 
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        post.published 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {post.published ? "منشور" : "مسودة"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleEdit(post)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => handleDelete(post.id)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {currentPosts.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
-                    لا توجد نتائج مطابقة لبحثك
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
+      <Tabs defaultValue="posts" onValueChange={setCurrentTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="posts">المقالات</TabsTrigger>
+          <TabsTrigger value="categories">الفئات</TabsTrigger>
+        </TabsList>
         
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <CardFooter className="flex justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              <ArrowRight className="h-4 w-4" />
-              السابق
+        <TabsContent value="posts" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">إدارة المدونة</h1>
+            <Button onClick={handleCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              مقالة جديدة
             </Button>
-            <span className="text-sm text-gray-500">
-              الصفحة {currentPage} من {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              التالي
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
+          </div>
+          
+          {/* Search and filter */}
+          <div className="relative">
+            <Search className="h-4 w-4 absolute top-3 left-3 text-gray-400" />
+            <Input
+              placeholder="البحث عن المقالات..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          
+          {/* Blog posts table */}
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>العنوان</TableHead>
+                    <TableHead>الفئة</TableHead>
+                    <TableHead>التاريخ</TableHead>
+                    <TableHead>الحالة</TableHead>
+                    <TableHead className="text-right">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentPosts.map((post) => (
+                    <TableRow key={post.id}>
+                      <TableCell className="font-medium">{post.title}</TableCell>
+                      <TableCell>{post.category}</TableCell>
+                      <TableCell>{post.date}</TableCell>
+                      <TableCell>
+                        <span 
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            post.published 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {post.published ? "منشور" : "مسودة"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEdit(post)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDelete(post.id)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {currentPosts.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-4">
+                        لا توجد نتائج مطابقة لبحثك
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <CardFooter className="flex justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  السابق
+                </Button>
+                <span className="text-sm text-gray-500">
+                  الصفحة {currentPage} من {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  التالي
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </CardFooter>
+            )}
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="categories" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">إدارة الفئات</h1>
+          </div>
+          
+          {/* Add/Edit Category Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{isEditingCategory ? "تعديل الفئة" : "إضافة فئة جديدة"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex space-x-4 rtl:space-x-reverse">
+                <Input
+                  placeholder="اسم الفئة"
+                  value={currentCategory}
+                  onChange={(e) => setCurrentCategory(e.target.value)}
+                />
+                {isEditingCategory ? (
+                  <div className="space-x-2 rtl:space-x-reverse">
+                    <Button onClick={handleSaveCategory}>حفظ التغييرات</Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsEditingCategory(false);
+                        setCurrentCategory("");
+                        setCategoryToEdit("");
+                      }}
+                    >
+                      إلغاء
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={handleAddCategory}>إضافة</Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Categories List */}
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>اسم الفئة</TableHead>
+                    <TableHead>عدد المقالات</TableHead>
+                    <TableHead className="text-right">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories.map((category) => (
+                    <TableRow key={category}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          <Tag className="h-4 w-4 mr-2" />
+                          {category}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {posts.filter(post => post.category === category).length}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEditCategory(category)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDeleteCategory(category)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {categories.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-4">
+                        لا توجد فئات
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
