@@ -2,7 +2,24 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+
+// Mock database function to store consultation requests
+const addConsultationToDatabase = async (consultationData: any) => {
+  // In a real implementation, this would connect to your backend
+  // For now, we'll store in localStorage to demonstrate the functionality
+  const existingConsultations = JSON.parse(localStorage.getItem('consultations') || '[]');
+  const newConsultation = {
+    id: Date.now(),
+    ...consultationData,
+    date: new Date().toISOString().split('T')[0],
+    status: "new"
+  };
+  
+  existingConsultations.push(newConsultation);
+  localStorage.setItem('consultations', JSON.stringify(existingConsultations));
+  return newConsultation;
+};
 
 const ConsultationForm = () => {
   const { toast } = useToast();
@@ -23,12 +40,14 @@ const ConsultationForm = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Save consultation request to our mock database
+      await addConsultationToDatabase(formData);
+      
       // Reset form
       setFormData({
         name: "",
@@ -43,9 +62,15 @@ const ConsultationForm = () => {
         title: "تم إرسال طلب الاستشارة",
         description: "سنتواصل معك قريباً",
       });
-      
+    } catch (error) {
+      toast({
+        title: "حدث خطأ",
+        description: "لم نتمكن من إرسال طلبك، يرجى المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (

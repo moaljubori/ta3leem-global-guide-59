@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,9 +26,29 @@ import {
   SheetHeader, SheetTitle, 
   SheetClose
 } from "@/components/ui/sheet";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock consultation requests data
+// Status badges configuration
+const statusConfig = {
+  new: {
+    label: "جديد",
+    color: "bg-blue-100 text-blue-800",
+  },
+  "in-progress": {
+    label: "قيد المعالجة",
+    color: "bg-yellow-100 text-yellow-800",
+  },
+  completed: {
+    label: "مكتمل",
+    color: "bg-green-100 text-green-800",
+  },
+  rejected: {
+    label: "مرفوض",
+    color: "bg-red-100 text-red-800",
+  },
+};
+
+// Mock consultation requests data for initial state
 const mockConsultations = [
   {
     id: 1,
@@ -83,26 +102,6 @@ const mockConsultations = [
   },
 ];
 
-// Status badges configuration
-const statusConfig = {
-  new: {
-    label: "جديد",
-    color: "bg-blue-100 text-blue-800",
-  },
-  "in-progress": {
-    label: "قيد المعالجة",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-  completed: {
-    label: "مكتمل",
-    color: "bg-green-100 text-green-800",
-  },
-  rejected: {
-    label: "مرفوض",
-    color: "bg-red-100 text-red-800",
-  },
-};
-
 const AdminConsultations = () => {
   const [consultations, setConsultations] = useState(mockConsultations);
   const [searchQuery, setSearchQuery] = useState("");
@@ -112,12 +111,22 @@ const AdminConsultations = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const { toast } = useToast();
 
+  // Load consultations from localStorage on component mount
+  useEffect(() => {
+    const storedConsultations = localStorage.getItem("consultations");
+    if (storedConsultations) {
+      const parsedConsultations = JSON.parse(storedConsultations);
+      // Combine mock data with stored consultations
+      setConsultations([...parsedConsultations, ...mockConsultations]);
+    }
+  }, []);
+
   // Filter consultations based on search query and status
   const filteredConsultations = consultations.filter((consultation) => {
     const matchesSearch =
       consultation.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       consultation.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      consultation.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      (consultation.subject && consultation.subject.toLowerCase().includes(searchQuery.toLowerCase()));
       
     const matchesStatus = filterStatus === "all" || consultation.status === filterStatus;
     
@@ -139,7 +148,14 @@ const AdminConsultations = () => {
 
   const handleDeleteConsultation = (id: number) => {
     if (window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
-      setConsultations(consultations.filter((item) => item.id !== id));
+      const updatedConsultations = consultations.filter((item) => item.id !== id);
+      setConsultations(updatedConsultations);
+      
+      // Update localStorage
+      localStorage.setItem("consultations", JSON.stringify(
+        updatedConsultations.filter(c => !mockConsultations.some(m => m.id === c.id))
+      ));
+      
       toast({
         title: "تم الحذف بنجاح",
         description: "تم حذف طلب الاستشارة بنجاح",
@@ -148,11 +164,16 @@ const AdminConsultations = () => {
   };
 
   const handleStatusChange = (id: number, status: string) => {
-    setConsultations(
-      consultations.map((item) =>
-        item.id === id ? { ...item, status } : item
-      )
+    const updatedConsultations = consultations.map((item) =>
+      item.id === id ? { ...item, status } : item
     );
+    
+    setConsultations(updatedConsultations);
+    
+    // Update localStorage, excluding mock data
+    localStorage.setItem("consultations", JSON.stringify(
+      updatedConsultations.filter(c => !mockConsultations.some(m => m.id === c.id))
+    ));
     
     // If changing the currently viewed consultation
     if (selectedConsultation && selectedConsultation.id === id) {

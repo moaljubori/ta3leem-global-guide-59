@@ -1,984 +1,602 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Edit, Save, Plus, Trash } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+import { Trash, Plus, ImageIcon, Pencil } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-// Mock data for site sections
-const initialHeroSection = {
-  title: "ابدأ رحلتك الدراسية العالمية مع خبراء التعليم",
-  subtitle: "نرافقك في كل خطوة من خطوات دراستك في الخارج، من الاستشارة الأولى حتى التخرج",
-  stats: [
-    { label: "طالب تم قبولهم", value: "+1000" },
-    { label: "جامعة شريكة", value: "+50" },
-    { label: "نسبة النجاح", value: "98%" },
-  ],
-  buttons: [
-    { text: "طلب استشارة مجانية", type: "primary", action: "scroll" },
-    { text: "تعرف على خدماتنا", type: "secondary", action: "link", url: "/services" }
-  ]
+// Mock data for the site sections
+const heroSectionData = {
+  title: "رحلتك التعليمية تبدأ هنا",
+  subtitle: "نساعدك في الحصول على القبول في أفضل الجامعات العالمية",
+  buttonText: "تواصل معنا",
+  buttonLink: "/contact",
+  backgroundImage: "/images/hero-background.jpg", // Example path
 };
 
-const initialCountriesSection = {
-  title: "اختر وجهتك الدراسية المثالية",
-  subtitle: "نقدم خدماتنا الاستشارية للدراسة في أفضل الجامعات العالمية في ثلاث دول رائدة في مجال التعليم",
-  countries: [
-    {
-      id: "canada",
-      name: "كندا",
-      flag: "🇨🇦",
-      description: "بيئة تعليمية متميزة وفرص وظيفية واعدة بعد التخرج، مع إمكانية الحصول على الإقامة الدائمة.",
-      universities: 96,
-      studentsHelped: 450,
-    },
-    {
-      id: "usa",
-      name: "الولايات المتحدة",
-      flag: "🇺🇸",
-      description: "جامعات مرموقة عالمياً وبرامج متنوعة في جميع التخصصات، مع بيئة بحثية متطورة.",
-      universities: 127,
-      studentsHelped: 380,
-    },
-    {
-      id: "uk",
-      name: "المملكة المتحدة",
-      flag: "🇬🇧",
-      description: "برامج دراسية قصيرة المدة وتاريخ عريق في التعليم العالي، مع شهادات معترف بها دولياً.",
-      universities: 84,
-      studentsHelped: 310,
-    }
-  ]
-};
+const countriesData = [
+  { id: 1, name: "كندا", image: "/images/canada.jpg", description: "أفضل الجامعات في كندا" },
+  { id: 2, name: "المملكة المتحدة", image: "/images/uk.jpg", description: "الدراسة في بريطانيا" },
+  { id: 3, name: "أستراليا", image: "/images/australia.jpg", description: "فرص تعليمية في أستراليا" },
+  // More countries...
+];
 
-const initialTestimonialsSection = {
-  title: "آراء طلابنا",
-  subtitle: "استمع إلى تجارب الطلاب الذين ساعدناهم في رحلتهم الدراسية",
-  testimonials: [
-    {
-      id: 1,
-      name: "محمد أحمد",
-      role: "طالب ماجستير في جامعة تورنتو",
-      image: "/placeholder.svg",
-      content: "لولا مساعدة فريق الاستشارات، ما كنت استطعت الحصول على قبول في جامعة تورنتو. كانوا معي خطوة بخطوة."
-    },
-    {
-      id: 2,
-      name: "سارة خالد",
-      role: "طالبة بكالوريوس في جامعة هارفارد",
-      image: "/placeholder.svg",
-      content: "شركة متميزة حقًا، ساعدتني في الحصول على منحة دراسية كاملة وتسهيل إجراءات السفر والإقامة."
-    },
-    {
-      id: 3,
-      name: "فيصل العتيبي",
-      role: "خريج جامعة أوكسفورد",
-      image: "/placeholder.svg",
-      content: "أنصح بشدة بالاستعانة بخدمات هذه الشركة، فهم محترفون ولديهم خبرة كبيرة في مجال الدراسة في الخارج."
-    }
-  ]
-};
+const testimonialsData = [
+  { id: 1, name: "أحمد محمد", role: "طالب دكتوراه", image: "/images/testimonial1.jpg", content: "ساعدني فريق تعليم جلوبال في الحصول على قبول في جامعة تورونتو مع منحة كاملة." },
+  { id: 2, name: "سارة عبدالله", role: "طالبة ماجستير", image: "/images/testimonial2.jpg", content: "تجربة رائعة مع تعليم جلوبال. حصلت على قبول في 3 جامعات بريطانية." },
+  // More testimonials...
+];
 
-const initialBlogSection = {
-  title: "أحدث المقالات",
-  subtitle: "استكشف أحدث المقالات والأخبار حول الدراسة في الخارج",
-  showFeatured: true,
-  postsToShow: 3
-};
+const blogPreviewsData = [
+  { id: 1, title: "دليل الدراسة في كندا", image: "/images/blog1.jpg", excerpt: "كل ما تحتاج معرفته عن الدراسة في الجامعات الكندية..." },
+  { id: 2, title: "كيفية الحصول على المنح الدراسية", image: "/images/blog2.jpg", excerpt: "نصائح مهمة للحصول على منح دراسية كاملة..." },
+  // More blog previews...
+];
 
 const AdminSiteContent = () => {
+  const [activeTab, setActiveTab] = useState("hero");
   const { toast } = useToast();
-  const [heroSection, setHeroSection] = useState(initialHeroSection);
-  const [countriesSection, setCountriesSection] = useState(initialCountriesSection);
-  const [testimonialsSection, setTestimonialsSection] = useState(initialTestimonialsSection);
-  const [blogSection, setBlogSection] = useState(initialBlogSection);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // State for editing flags
-  const [editingHero, setEditingHero] = useState(false);
-  const [editingCountry, setEditingCountry] = useState<string | null>(null);
-  const [editingTestimonial, setEditingTestimonial] = useState<number | null>(null);
-  const [editingBlog, setEditingBlog] = useState(false);
+  // State for each section
+  const [hero, setHero] = useState(heroSectionData);
+  const [countries, setCountries] = useState(countriesData);
+  const [testimonials, setTestimonials] = useState(testimonialsData);
+  const [blogPreviews, setBlogPreviews] = useState(blogPreviewsData);
+  
+  // State for editing items
+  const [editingCountry, setEditingCountry] = useState<any>(null);
+  const [editingTestimonial, setEditingTestimonial] = useState<any>(null);
+  const [editingBlogPreview, setEditingBlogPreview] = useState<any>(null);
+  
+  // Image preview state
+  const [imagePreview, setImagePreview] = useState<string>("");
 
-  // State for new items
-  const [newStat, setNewStat] = useState({ label: "", value: "" });
-  const [newButton, setNewButton] = useState({ text: "", type: "primary", action: "link", url: "" });
-  const [newCountry, setNewCountry] = useState({
-    id: "",
-    name: "",
-    flag: "",
-    description: "",
-    universities: 0,
-    studentsHelped: 0,
-  });
-  const [newTestimonial, setNewTestimonial] = useState({
-    name: "",
-    role: "",
-    image: "/placeholder.svg",
-    content: ""
-  });
+  // Common image handling functions
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>, setter: Function, item: any) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Create a preview URL
+      const imageUrl = URL.createObjectURL(file);
+      setImagePreview(imageUrl);
+      
+      // Update item with the image
+      setter({
+        ...item,
+        imageFile: file,
+        image: imageUrl // In real implementation, this would be the uploaded image URL
+      });
+    }
+  };
 
-  // Save handlers
+  const handleRemoveImage = (setter: Function, item: any) => {
+    setImagePreview("");
+    setter({
+      ...item,
+      imageFile: null,
+      image: ""
+    });
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Save functions for each section
   const saveHeroSection = () => {
+    // In a real implementation, this would save to backend
     toast({
       title: "تم الحفظ",
       description: "تم حفظ تغييرات قسم الترحيب بنجاح",
     });
-    setEditingHero(false);
   };
 
-  const saveCountriesSection = () => {
-    toast({
-      title: "تم الحفظ",
-      description: "تم حفظ تغييرات قسم الدول بنجاح",
-    });
+  const saveCountry = (country: any) => {
+    if (country.id) {
+      // Update existing country
+      setCountries(countries.map(c => c.id === country.id ? country : c));
+    } else {
+      // Add new country
+      setCountries([...countries, { ...country, id: Date.now() }]);
+    }
     setEditingCountry(null);
-  };
-
-  const saveTestimonialsSection = () => {
+    setImagePreview("");
     toast({
       title: "تم الحفظ",
-      description: "تم حفظ تغييرات قسم التوصيات بنجاح",
+      description: "تم حفظ الدولة بنجاح",
     });
+  };
+
+  const saveTestimonial = (testimonial: any) => {
+    if (testimonial.id) {
+      // Update existing testimonial
+      setTestimonials(testimonials.map(t => t.id === testimonial.id ? testimonial : t));
+    } else {
+      // Add new testimonial
+      setTestimonials([...testimonials, { ...testimonial, id: Date.now() }]);
+    }
     setEditingTestimonial(null);
-  };
-
-  const saveBlogSection = () => {
+    setImagePreview("");
     toast({
       title: "تم الحفظ",
-      description: "تم حفظ تغييرات قسم المدونة بنجاح",
+      description: "تم حفظ التوصية بنجاح",
     });
-    setEditingBlog(false);
   };
 
-  // Add handlers
-  const addHeroStat = () => {
-    if (newStat.label && newStat.value) {
-      setHeroSection({
-        ...heroSection,
-        stats: [...heroSection.stats, newStat]
-      });
-      setNewStat({ label: "", value: "" });
-      toast({
-        title: "تمت الإضافة",
-        description: "تم إضافة إحصائية جديدة بنجاح",
-      });
+  const saveBlogPreview = (preview: any) => {
+    if (preview.id) {
+      // Update existing blog preview
+      setBlogPreviews(blogPreviews.map(b => b.id === preview.id ? preview : b));
+    } else {
+      // Add new blog preview
+      setBlogPreviews([...blogPreviews, { ...preview, id: Date.now() }]);
     }
-  };
-
-  const addHeroButton = () => {
-    if (newButton.text) {
-      setHeroSection({
-        ...heroSection,
-        buttons: [...heroSection.buttons, newButton]
-      });
-      setNewButton({ text: "", type: "primary", action: "link", url: "" });
-      toast({
-        title: "تمت الإضافة",
-        description: "تم إضافة زر جديد بنجاح",
-      });
-    }
-  };
-
-  const addCountry = () => {
-    if (newCountry.name && newCountry.flag) {
-      const countryId = newCountry.name.toLowerCase().replace(/\s+/g, '-');
-      setCountriesSection({
-        ...countriesSection,
-        countries: [...countriesSection.countries, { ...newCountry, id: countryId }]
-      });
-      setNewCountry({
-        id: "",
-        name: "",
-        flag: "",
-        description: "",
-        universities: 0,
-        studentsHelped: 0,
-      });
-      toast({
-        title: "تمت الإضافة",
-        description: "تم إضافة دولة جديدة بنجاح",
-      });
-    }
-  };
-
-  const addTestimonial = () => {
-    if (newTestimonial.name && newTestimonial.content) {
-      const newId = testimonialsSection.testimonials.length > 0 
-        ? Math.max(...testimonialsSection.testimonials.map(t => t.id)) + 1 
-        : 1;
-      setTestimonialsSection({
-        ...testimonialsSection,
-        testimonials: [...testimonialsSection.testimonials, { ...newTestimonial, id: newId }]
-      });
-      setNewTestimonial({
-        name: "",
-        role: "",
-        image: "/placeholder.svg",
-        content: ""
-      });
-      toast({
-        title: "تمت الإضافة",
-        description: "تم إضافة توصية جديدة بنجاح",
-      });
-    }
-  };
-
-  // Delete handlers
-  const deleteHeroStat = (index: number) => {
-    const newStats = [...heroSection.stats];
-    newStats.splice(index, 1);
-    setHeroSection({
-      ...heroSection,
-      stats: newStats
-    });
+    setEditingBlogPreview(null);
+    setImagePreview("");
     toast({
-      title: "تم الحذف",
-      description: "تم حذف الإحصائية بنجاح",
+      title: "تم الحفظ",
+      description: "تم حفظ معاينة المقالة بنجاح",
     });
   };
 
-  const deleteHeroButton = (index: number) => {
-    const newButtons = [...heroSection.buttons];
-    newButtons.splice(index, 1);
-    setHeroSection({
-      ...heroSection,
-      buttons: newButtons
-    });
-    toast({
-      title: "تم الحذف",
-      description: "تم حذف الزر بنجاح",
-    });
-  };
-
-  const deleteCountry = (id: string) => {
-    setCountriesSection({
-      ...countriesSection,
-      countries: countriesSection.countries.filter(country => country.id !== id)
-    });
-    toast({
-      title: "تم الحذف",
-      description: "تم حذف الدولة بنجاح",
-    });
+  // Delete functions
+  const deleteCountry = (id: number) => {
+    if (window.confirm("هل أنت متأكد من حذف هذه الدولة؟")) {
+      setCountries(countries.filter(c => c.id !== id));
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف الدولة بنجاح",
+      });
+    }
   };
 
   const deleteTestimonial = (id: number) => {
-    setTestimonialsSection({
-      ...testimonialsSection,
-      testimonials: testimonialsSection.testimonials.filter(testimonial => testimonial.id !== id)
-    });
-    toast({
-      title: "تم الحذف",
-      description: "تم حذف التوصية بنجاح",
-    });
+    if (window.confirm("هل أنت متأكد من حذف هذه التوصية؟")) {
+      setTestimonials(testimonials.filter(t => t.id !== id));
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف التوصية بنجاح",
+      });
+    }
   };
+
+  const deleteBlogPreview = (id: number) => {
+    if (window.confirm("هل أنت متأكد من حذف معاينة المقالة؟")) {
+      setBlogPreviews(blogPreviews.filter(b => b.id !== id));
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف معاينة المقالة بنجاح",
+      });
+    }
+  };
+
+  // Image upload UI component
+  const ImageUploadField = ({ 
+    label, 
+    imageUrl, 
+    onImageChange, 
+    onRemoveImage 
+  }: { 
+    label: string, 
+    imageUrl: string, 
+    onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void, 
+    onRemoveImage: () => void 
+  }) => (
+    <div className="space-y-2">
+      <label className="text-sm font-medium">{label}</label>
+      <div className="border rounded-md p-4 space-y-4">
+        {imageUrl ? (
+          <div className="space-y-4">
+            <div className="relative aspect-video mx-auto overflow-hidden rounded-md border">
+              <img 
+                src={imageUrl} 
+                alt="Preview" 
+                className="object-cover w-full h-full"
+              />
+            </div>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onRemoveImage}
+              className="w-full text-red-500 hover:text-red-700"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              حذف الصورة
+            </Button>
+          </div>
+        ) : (
+          <div 
+            className="border-2 border-dashed rounded-md p-8 text-center cursor-pointer hover:bg-gray-50"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <ImageIcon className="h-10 w-10 mx-auto text-gray-400 mb-3" />
+            <p className="text-sm text-gray-500 mb-1">اضغط لإضافة صورة</p>
+            <p className="text-xs text-gray-400">PNG, JPG, WEBP حتى 5MB</p>
+          </div>
+        )}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={onImageChange}
+          accept="image/*"
+          className="hidden"
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">إدارة محتوى الموقع</h1>
         <p className="text-muted-foreground">
-          تخصيص العناصر المختلفة للصفحة الرئيسية وأقسام الموقع
+          تعديل وتخصيص محتوى الأقسام المختلفة في الموقع
         </p>
       </div>
-      
-      <Tabs defaultValue="hero">
-        <TabsList className="mb-4">
-          <TabsTrigger value="hero">قسم الترحيب</TabsTrigger>
-          <TabsTrigger value="countries">قسم الدول</TabsTrigger>
-          <TabsTrigger value="testimonials">قسم التوصيات</TabsTrigger>
-          <TabsTrigger value="blog">قسم المدونة</TabsTrigger>
-        </TabsList>
 
+      <Tabs defaultValue="hero" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="hero">الصفحة الرئيسية</TabsTrigger>
+          <TabsTrigger value="countries">الدول</TabsTrigger>
+          <TabsTrigger value="testimonials">التوصيات</TabsTrigger>
+          <TabsTrigger value="blog-preview">معاينات المدونة</TabsTrigger>
+        </TabsList>
+        
+        {/* Hero Section Tab */}
         <TabsContent value="hero" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>قسم الترحيب الرئيسي</CardTitle>
-                  <CardDescription>
-                    تخصيص عناوين ومحتوى قسم الترحيب الرئيسي
-                  </CardDescription>
-                </div>
-                <Button 
-                  onClick={() => editingHero ? saveHeroSection() : setEditingHero(true)}
-                  variant={editingHero ? "default" : "outline"}
-                >
-                  {editingHero ? (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      حفظ التغييرات
-                    </>
-                  ) : (
-                    <>
-                      <Edit className="h-4 w-4 mr-2" />
-                      تعديل
-                    </>
-                  )}
-                </Button>
-              </div>
+              <CardTitle>قسم الترحيب الرئيسي</CardTitle>
+              <CardDescription>تعديل نص وصورة قسم الترحيب</CardDescription>
             </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="heroTitle" className="text-sm font-medium">
-                  العنوان الرئيسي
-                </label>
-                <Input
-                  id="heroTitle"
-                  value={heroSection.title}
-                  onChange={(e) => setHeroSection({...heroSection, title: e.target.value})}
-                  disabled={!editingHero}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="heroSubtitle" className="text-sm font-medium">
-                  العنوان الفرعي
-                </label>
-                <Input
-                  id="heroSubtitle"
-                  value={heroSection.subtitle}
-                  onChange={(e) => setHeroSection({...heroSection, subtitle: e.target.value})}
-                  disabled={!editingHero}
-                />
-              </div>
-
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="stats">
-                  <AccordionTrigger>الإحصائيات</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>العنوان</TableHead>
-                            <TableHead>القيمة</TableHead>
-                            <TableHead className="w-[100px]">الإجراءات</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {heroSection.stats.map((stat, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{stat.label}</TableCell>
-                              <TableCell>{stat.value}</TableCell>
-                              <TableCell>
-                                {editingHero && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => deleteHeroStat(index)}
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-
-                      {editingHero && (
-                        <div className="flex items-center gap-4 mt-4">
-                          <Input
-                            placeholder="العنوان"
-                            value={newStat.label}
-                            onChange={(e) => setNewStat({...newStat, label: e.target.value})}
-                          />
-                          <Input
-                            placeholder="القيمة"
-                            value={newStat.value}
-                            onChange={(e) => setNewStat({...newStat, value: e.target.value})}
-                          />
-                          <Button onClick={addHeroStat}>إضافة</Button>
-                        </div>
-                      )}
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="hero-title" className="text-sm font-medium">العنوان الرئيسي</label>
+                    <Input 
+                      id="hero-title" 
+                      value={hero.title} 
+                      onChange={(e) => setHero({...hero, title: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="hero-subtitle" className="text-sm font-medium">العنوان الفرعي</label>
+                    <Textarea 
+                      id="hero-subtitle" 
+                      value={hero.subtitle} 
+                      onChange={(e) => setHero({...hero, subtitle: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="button-text" className="text-sm font-medium">نص الزر</label>
+                      <Input 
+                        id="button-text" 
+                        value={hero.buttonText} 
+                        onChange={(e) => setHero({...hero, buttonText: e.target.value})}
+                      />
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="buttons">
-                  <AccordionTrigger>الأزرار</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>النص</TableHead>
-                            <TableHead>النوع</TableHead>
-                            <TableHead>الإجراء</TableHead>
-                            <TableHead className="w-[100px]">الإجراءات</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {heroSection.buttons.map((button, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{button.text}</TableCell>
-                              <TableCell>
-                                {button.type === "primary" ? "رئيسي" : "ثانوي"}
-                              </TableCell>
-                              <TableCell>
-                                {button.action === "link" ? `رابط: ${button.url}` : "تمرير للأسفل"}
-                              </TableCell>
-                              <TableCell>
-                                {editingHero && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => deleteHeroButton(index)}
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-
-                      {editingHero && (
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                          <Input
-                            placeholder="نص الزر"
-                            value={newButton.text}
-                            onChange={(e) => setNewButton({...newButton, text: e.target.value})}
-                          />
-                          <select
-                            className="w-full h-10 px-3 py-2 text-base border rounded-md"
-                            value={newButton.type}
-                            onChange={(e) => setNewButton({...newButton, type: e.target.value as "primary" | "secondary"})}
-                          >
-                            <option value="primary">رئيسي</option>
-                            <option value="secondary">ثانوي</option>
-                          </select>
-                          <select
-                            className="w-full h-10 px-3 py-2 text-base border rounded-md"
-                            value={newButton.action}
-                            onChange={(e) => setNewButton({...newButton, action: e.target.value as "link" | "scroll"})}
-                          >
-                            <option value="link">رابط</option>
-                            <option value="scroll">تمرير للأسفل</option>
-                          </select>
-                          {newButton.action === "link" && (
-                            <Input
-                              placeholder="الرابط"
-                              value={newButton.url || ""}
-                              onChange={(e) => setNewButton({...newButton, url: e.target.value})}
-                            />
-                          )}
-                          <Button className="col-span-2" onClick={addHeroButton}>إضافة زر</Button>
-                        </div>
-                      )}
+                    
+                    <div className="space-y-2">
+                      <label htmlFor="button-link" className="text-sm font-medium">رابط الزر</label>
+                      <Input 
+                        id="button-link" 
+                        value={hero.buttonLink} 
+                        onChange={(e) => setHero({...hero, buttonLink: e.target.value})}
+                      />
                     </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                  </div>
+                </div>
+                
+                <div>
+                  <ImageUploadField 
+                    label="صورة الخلفية" 
+                    imageUrl={hero.backgroundImage} 
+                    onImageChange={(e) => handleImageChange(e, setHero, hero)}
+                    onRemoveImage={() => handleRemoveImage(setHero, hero)}
+                  />
+                </div>
+              </div>
             </CardContent>
+            <CardFooter>
+              <Button onClick={saveHeroSection}>حفظ التغييرات</Button>
+            </CardFooter>
           </Card>
         </TabsContent>
-
+        
+        {/* Countries Tab */}
         <TabsContent value="countries" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>قسم الدول</CardTitle>
-                  <CardDescription>
-                    إدارة وتخصيص معلومات الدول المعروضة
-                  </CardDescription>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">إدارة الدول</h2>
+            <Button onClick={() => setEditingCountry({ name: "", description: "", image: "" })}>
+              <Plus className="h-4 w-4 mr-2" />
+              إضافة دولة جديدة
+            </Button>
+          </div>
+          
+          {editingCountry ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{editingCountry.id ? "تعديل دولة" : "إضافة دولة جديدة"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="country-name" className="text-sm font-medium">اسم الدولة</label>
+                  <Input 
+                    id="country-name" 
+                    value={editingCountry.name} 
+                    onChange={(e) => setEditingCountry({...editingCountry, name: e.target.value})}
+                  />
                 </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="countriesTitle" className="text-sm font-medium">
-                  العنوان الرئيسي
-                </label>
-                <Input
-                  id="countriesTitle"
-                  value={countriesSection.title}
-                  onChange={(e) => setCountriesSection({...countriesSection, title: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="countriesSubtitle" className="text-sm font-medium">
-                  العنوان الفرعي
-                </label>
-                <Input
-                  id="countriesSubtitle"
-                  value={countriesSection.subtitle}
-                  onChange={(e) => setCountriesSection({...countriesSection, subtitle: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium mb-4">الدول</h3>
                 
-                <div className="space-y-6">
-                  {countriesSection.countries.map((country) => (
-                    <Card key={country.id} className="overflow-hidden">
-                      <CardHeader className="bg-blue-50 flex flex-row items-center justify-between p-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{country.flag}</span>
-                          <h4 className="font-bold">{country.name}</h4>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingCountry(editingCountry === country.id ? null : country.id)}
-                          >
-                            <Edit className="h-4 w-4" />
+                <div className="space-y-2">
+                  <label htmlFor="country-description" className="text-sm font-medium">الوصف</label>
+                  <Textarea 
+                    id="country-description" 
+                    value={editingCountry.description} 
+                    onChange={(e) => setEditingCountry({...editingCountry, description: e.target.value})}
+                  />
+                </div>
+                
+                <ImageUploadField 
+                  label="صورة الدولة" 
+                  imageUrl={editingCountry.image} 
+                  onImageChange={(e) => handleImageChange(e, setEditingCountry, editingCountry)}
+                  onRemoveImage={() => handleRemoveImage(setEditingCountry, editingCountry)}
+                />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => setEditingCountry(null)}>إلغاء</Button>
+                <Button onClick={() => saveCountry(editingCountry)}>حفظ</Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>الصورة</TableHead>
+                      <TableHead>اسم الدولة</TableHead>
+                      <TableHead>الوصف</TableHead>
+                      <TableHead className="text-right">الإجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {countries.map((country) => (
+                      <TableRow key={country.id}>
+                        <TableCell>
+                          <div className="w-16 h-10 rounded overflow-hidden">
+                            {country.image ? (
+                              <img src={country.image} alt={country.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <ImageIcon className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{country.name}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{country.description}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingCountry(country)}>
+                            <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteCountry(country.id)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => deleteCountry(country.id)}>
                             <Trash className="h-4 w-4" />
                           </Button>
-                        </div>
-                      </CardHeader>
-
-                      {editingCountry === country.id && (
-                        <CardContent className="p-4 space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">الاسم</label>
-                              <Input
-                                value={country.name}
-                                onChange={(e) => {
-                                  const updatedCountries = countriesSection.countries.map(c => 
-                                    c.id === country.id ? {...c, name: e.target.value} : c
-                                  );
-                                  setCountriesSection({...countriesSection, countries: updatedCountries});
-                                }}
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">العلم (رمز تعبيري)</label>
-                              <Input
-                                value={country.flag}
-                                onChange={(e) => {
-                                  const updatedCountries = countriesSection.countries.map(c => 
-                                    c.id === country.id ? {...c, flag: e.target.value} : c
-                                  );
-                                  setCountriesSection({...countriesSection, countries: updatedCountries});
-                                }}
-                              />
-                            </div>
-
-                            <div className="space-y-2 md:col-span-2">
-                              <label className="text-sm font-medium">الوصف</label>
-                              <Textarea
-                                value={country.description}
-                                onChange={(e) => {
-                                  const updatedCountries = countriesSection.countries.map(c => 
-                                    c.id === country.id ? {...c, description: e.target.value} : c
-                                  );
-                                  setCountriesSection({...countriesSection, countries: updatedCountries});
-                                }}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">عدد الجامعات</label>
-                              <Input
-                                type="number"
-                                value={country.universities}
-                                onChange={(e) => {
-                                  const updatedCountries = countriesSection.countries.map(c => 
-                                    c.id === country.id ? {...c, universities: parseInt(e.target.value) || 0} : c
-                                  );
-                                  setCountriesSection({...countriesSection, countries: updatedCountries});
-                                }}
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">عدد الطلاب المساعدين</label>
-                              <Input
-                                type="number"
-                                value={country.studentsHelped}
-                                onChange={(e) => {
-                                  const updatedCountries = countriesSection.countries.map(c => 
-                                    c.id === country.id ? {...c, studentsHelped: parseInt(e.target.value) || 0} : c
-                                  );
-                                  setCountriesSection({...countriesSection, countries: updatedCountries});
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button onClick={saveCountriesSection}>
-                              <Save className="h-4 w-4 mr-2" />
-                              حفظ التغييرات
-                            </Button>
-                          </div>
-                        </CardContent>
-                      )}
-
-                      {editingCountry !== country.id && (
-                        <CardContent className="p-4">
-                          <p className="text-gray-600 mb-4">{country.description}</p>
-                          <div className="flex justify-between text-sm text-gray-500">
-                            <div>
-                              <span className="font-bold text-blue-800">{country.universities}+</span> جامعة
-                            </div>
-                            <div>
-                              <span className="font-bold text-blue-800">{country.studentsHelped}+</span> طالب
-                            </div>
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>إضافة دولة جديدة</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">الاسم</label>
-                        <Input
-                          value={newCountry.name}
-                          onChange={(e) => setNewCountry({...newCountry, name: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">العلم (رمز تعبيري)</label>
-                        <Input
-                          value={newCountry.flag}
-                          onChange={(e) => setNewCountry({...newCountry, flag: e.target.value})}
-                        />
-                      </div>
-
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm font-medium">الوصف</label>
-                        <Textarea
-                          value={newCountry.description}
-                          onChange={(e) => setNewCountry({...newCountry, description: e.target.value})}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">عدد الجامعات</label>
-                        <Input
-                          type="number"
-                          value={newCountry.universities || ""}
-                          onChange={(e) => setNewCountry({...newCountry, universities: parseInt(e.target.value) || 0})}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">عدد الطلاب المساعدين</label>
-                        <Input
-                          type="number"
-                          value={newCountry.studentsHelped || ""}
-                          onChange={(e) => setNewCountry({...newCountry, studentsHelped: parseInt(e.target.value) || 0})}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button onClick={addCountry}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        إضافة دولة
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
-
+        
+        {/* Testimonials Tab */}
         <TabsContent value="testimonials" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>قسم التوصيات</CardTitle>
-                  <CardDescription>
-                    إدارة وتخصيص توصيات الطلاب المعروضة
-                  </CardDescription>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">إدارة التوصيات</h2>
+            <Button onClick={() => setEditingTestimonial({ name: "", role: "", content: "", image: "" })}>
+              <Plus className="h-4 w-4 mr-2" />
+              إضافة توصية جديدة
+            </Button>
+          </div>
+          
+          {editingTestimonial ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{editingTestimonial.id ? "تعديل توصية" : "إضافة توصية جديدة"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="testimonial-name" className="text-sm font-medium">الاسم</label>
+                    <Input 
+                      id="testimonial-name" 
+                      value={editingTestimonial.name} 
+                      onChange={(e) => setEditingTestimonial({...editingTestimonial, name: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label htmlFor="testimonial-role" className="text-sm font-medium">الدور / المنصب</label>
+                    <Input 
+                      id="testimonial-role" 
+                      value={editingTestimonial.role} 
+                      onChange={(e) => setEditingTestimonial({...editingTestimonial, role: e.target.value})}
+                    />
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="testimonialsTitle" className="text-sm font-medium">
-                  العنوان الرئيسي
-                </label>
-                <Input
-                  id="testimonialsTitle"
-                  value={testimonialsSection.title}
-                  onChange={(e) => setTestimonialsSection({...testimonialsSection, title: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="testimonialsSubtitle" className="text-sm font-medium">
-                  العنوان الفرعي
-                </label>
-                <Input
-                  id="testimonialsSubtitle"
-                  value={testimonialsSection.subtitle}
-                  onChange={(e) => setTestimonialsSection({...testimonialsSection, subtitle: e.target.value})}
-                />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium mb-4">التوصيات</h3>
                 
-                <div className="space-y-6">
-                  {testimonialsSection.testimonials.map((testimonial) => (
-                    <Card key={testimonial.id} className="overflow-hidden">
-                      <CardHeader className="bg-blue-50 flex flex-row items-center justify-between p-4">
-                        <div>
-                          <h4 className="font-bold">{testimonial.name}</h4>
-                          <p className="text-sm text-gray-500">{testimonial.role}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingTestimonial(editingTestimonial === testimonial.id ? null : testimonial.id)}
-                          >
-                            <Edit className="h-4 w-4" />
+                <div className="space-y-2">
+                  <label htmlFor="testimonial-content" className="text-sm font-medium">المحتوى</label>
+                  <Textarea 
+                    id="testimonial-content" 
+                    value={editingTestimonial.content} 
+                    onChange={(e) => setEditingTestimonial({...editingTestimonial, content: e.target.value})}
+                    rows={4}
+                  />
+                </div>
+                
+                <ImageUploadField 
+                  label="صورة شخصية" 
+                  imageUrl={editingTestimonial.image} 
+                  onImageChange={(e) => handleImageChange(e, setEditingTestimonial, editingTestimonial)}
+                  onRemoveImage={() => handleRemoveImage(setEditingTestimonial, editingTestimonial)}
+                />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => setEditingTestimonial(null)}>إلغاء</Button>
+                <Button onClick={() => saveTestimonial(editingTestimonial)}>حفظ</Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>الصورة</TableHead>
+                      <TableHead>الاسم</TableHead>
+                      <TableHead>الدور</TableHead>
+                      <TableHead>المحتوى</TableHead>
+                      <TableHead className="text-right">الإجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {testimonials.map((testimonial) => (
+                      <TableRow key={testimonial.id}>
+                        <TableCell>
+                          <div className="w-10 h-10 rounded-full overflow-hidden">
+                            {testimonial.image ? (
+                              <img src={testimonial.image} alt={testimonial.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-full">
+                                <ImageIcon className="h-4 w-4 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{testimonial.name}</TableCell>
+                        <TableCell>{testimonial.role}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{testimonial.content}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingTestimonial(testimonial)}>
+                            <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteTestimonial(testimonial.id)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => deleteTestimonial(testimonial.id)}>
                             <Trash className="h-4 w-4" />
                           </Button>
-                        </div>
-                      </CardHeader>
-
-                      {editingTestimonial === testimonial.id ? (
-                        <CardContent className="p-4 space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">الاسم</label>
-                              <Input
-                                value={testimonial.name}
-                                onChange={(e) => {
-                                  const updatedTestimonials = testimonialsSection.testimonials.map(t => 
-                                    t.id === testimonial.id ? {...t, name: e.target.value} : t
-                                  );
-                                  setTestimonialsSection({...testimonialsSection, testimonials: updatedTestimonials});
-                                }}
-                              />
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">الدور</label>
-                              <Input
-                                value={testimonial.role}
-                                onChange={(e) => {
-                                  const updatedTestimonials = testimonialsSection.testimonials.map(t => 
-                                    t.id === testimonial.id ? {...t, role: e.target.value} : t
-                                  );
-                                  setTestimonialsSection({...testimonialsSection, testimonials: updatedTestimonials});
-                                }}
-                              />
-                            </div>
-
-                            <div className="space-y-2 md:col-span-2">
-                              <label className="text-sm font-medium">المحتوى</label>
-                              <Textarea
-                                value={testimonial.content}
-                                onChange={(e) => {
-                                  const updatedTestimonials = testimonialsSection.testimonials.map(t => 
-                                    t.id === testimonial.id ? {...t, content: e.target.value} : t
-                                  );
-                                  setTestimonialsSection({...testimonialsSection, testimonials: updatedTestimonials});
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button onClick={saveTestimonialsSection}>
-                              <Save className="h-4 w-4 mr-2" />
-                              حفظ التغييرات
-                            </Button>
-                          </div>
-                        </CardContent>
-                      ) : (
-                        <CardContent className="p-4">
-                          <p className="text-gray-600 italic">{testimonial.content}</p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
-
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>إضافة توصية جديدة</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">الاسم</label>
-                        <Input
-                          value={newTestimonial.name}
-                          onChange={(e) => setNewTestimonial({...newTestimonial, name: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">الدور</label>
-                        <Input
-                          value={newTestimonial.role}
-                          onChange={(e) => setNewTestimonial({...newTestimonial, role: e.target.value})}
-                        />
-                      </div>
-
-                      <div className="space-y-2 md:col-span-2">
-                        <label className="text-sm font-medium">المحتوى</label>
-                        <Textarea
-                          value={newTestimonial.content}
-                          onChange={(e) => setNewTestimonial({...newTestimonial, content: e.target.value})}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Button onClick={addTestimonial}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        إضافة توصية
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
-
-        <TabsContent value="blog" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>قسم المدونة</CardTitle>
-                  <CardDescription>
-                    تخصيص إعدادات قسم المدونة في الصفحة الرئيسية
-                  </CardDescription>
+        
+        {/* Blog Preview Section Tab */}
+        <TabsContent value="blog-preview" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">إدارة معاينات المدونة</h2>
+            <Button onClick={() => setEditingBlogPreview({ title: "", excerpt: "", image: "" })}>
+              <Plus className="h-4 w-4 mr-2" />
+              إضافة معاينة جديدة
+            </Button>
+          </div>
+          
+          {editingBlogPreview ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{editingBlogPreview.id ? "تعديل معاينة" : "إضافة معاينة جديدة"}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="blog-title" className="text-sm font-medium">العنوان</label>
+                  <Input 
+                    id="blog-title" 
+                    value={editingBlogPreview.title} 
+                    onChange={(e) => setEditingBlogPreview({...editingBlogPreview, title: e.target.value})}
+                  />
                 </div>
-                <Button 
-                  onClick={() => editingBlog ? saveBlogSection() : setEditingBlog(true)}
-                  variant={editingBlog ? "default" : "outline"}
-                >
-                  {editingBlog ? (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      حفظ التغييرات
-                    </>
-                  ) : (
-                    <>
-                      <Edit className="h-4 w-4 mr-2" />
-                      تعديل
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <label htmlFor="blogTitle" className="text-sm font-medium">
-                  العنوان الرئيسي
-                </label>
-                <Input
-                  id="blogTitle"
-                  value={blogSection.title}
-                  onChange={(e) => setBlogSection({...blogSection, title: e.target.value})}
-                  disabled={!editingBlog}
+                
+                <div className="space-y-2">
+                  <label htmlFor="blog-excerpt" className="text-sm font-medium">مقتطف</label>
+                  <Textarea 
+                    id="blog-excerpt" 
+                    value={editingBlogPreview.excerpt} 
+                    onChange={(e) => setEditingBlogPreview({...editingBlogPreview, excerpt: e.target.value})}
+                  />
+                </div>
+                
+                <ImageUploadField 
+                  label="صورة المقالة" 
+                  imageUrl={editingBlogPreview.image} 
+                  onImageChange={(e) => handleImageChange(e, setEditingBlogPreview, editingBlogPreview)}
+                  onRemoveImage={() => handleRemoveImage(setEditingBlogPreview, editingBlogPreview)}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="blogSubtitle" className="text-sm font-medium">
-                  العنوان الفرعي
-                </label>
-                <Input
-                  id="blogSubtitle"
-                  value={blogSection.subtitle}
-                  onChange={(e) => setBlogSection({...blogSection, subtitle: e.target.value})}
-                  disabled={!editingBlog}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                <input
-                  type="checkbox"
-                  id="showFeatured"
-                  checked={blogSection.showFeatured}
-                  onChange={(e) => setBlogSection({...blogSection, showFeatured: e.target.checked})}
-                  disabled={!editingBlog}
-                  className="h-4 w-4"
-                />
-                <label htmlFor="showFeatured">عرض المقالة المميزة</label>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="postsToShow" className="text-sm font-medium">
-                  عدد المقالات للعرض
-                </label>
-                <Input
-                  id="postsToShow"
-                  type="number"
-                  value={blogSection.postsToShow}
-                  onChange={(e) => setBlogSection({...blogSection, postsToShow: parseInt(e.target.value) || 3})}
-                  disabled={!editingBlog}
-                  min={1}
-                  max={10}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => setEditingBlogPreview(null)}>إلغاء</Button>
+                <Button onClick={() => saveBlogPreview(editingBlogPreview)}>حفظ</Button>
+              </CardFooter>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>الصورة</TableHead>
+                      <TableHead>العنوان</TableHead>
+                      <TableHead>المقتطف</TableHead>
+                      <TableHead className="text-right">الإجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {blogPreviews.map((preview) => (
+                      <TableRow key={preview.id}>
+                        <TableCell>
+                          <div className="w-16 h-10 rounded overflow-hidden">
+                            {preview.image ? (
+                              <img src={preview.image} alt={preview.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <ImageIcon className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{preview.title}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{preview.excerpt}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingBlogPreview(preview)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => deleteBlogPreview(preview.id)}>
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

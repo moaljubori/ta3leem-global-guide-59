@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,9 +16,10 @@ import {
 } from "@/components/ui/table";
 import { 
   Plus, Search, Edit, Trash, 
-  ArrowLeft, ArrowRight, Tag
+  ArrowLeft, ArrowRight, Tag,
+  Image as ImageIcon, Upload
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +36,6 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-// Mock blog posts data
 const mockBlogPosts = [
   {
     id: 1,
@@ -80,7 +79,6 @@ const mockBlogPosts = [
   },
 ];
 
-// Mock categories
 const initialCategories = ["كندا", "المنح الدراسية", "التأشيرات", "ألمانيا", "أستراليا"];
 
 const AdminBlog = () => {
@@ -92,28 +90,55 @@ const AdminBlog = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentPost, setCurrentPost] = useState<any>(null);
   const [currentTab, setCurrentTab] = useState<string>("posts");
-  
-  // Category management state
-  const [isEditingCategory, setIsEditingCategory] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState("");
-  const [categoryToEdit, setCategoryToEdit] = useState("");
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const { toast } = useToast();
 
-  // Filter posts based on search query
   const filteredPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     post.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination
   const indexOfLastPost = currentPage * itemsPerPage;
   const indexOfFirstPost = indexOfLastPost - itemsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setImagePreview(imageUrl);
+      
+      if (currentPost) {
+        setCurrentPost({
+          ...currentPost,
+          imageFile: file,
+          imageUrl: imageUrl
+        });
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview("");
+    if (currentPost) {
+      setCurrentPost({
+        ...currentPost,
+        imageFile: null,
+        imageUrl: ""
+      });
+    }
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleEdit = (post: any) => {
     setCurrentPost(post);
+    setImagePreview(post.imageUrl || "");
     setIsEditing(true);
   };
 
@@ -143,6 +168,7 @@ const AdminBlog = () => {
     
     setIsEditing(false);
     setCurrentPost(null);
+    setImagePreview("");
   };
 
   const handleCreate = () => {
@@ -151,6 +177,7 @@ const AdminBlog = () => {
       title: "",
       category: "",
       content: "",
+      imageUrl: "",
       date: new Date().toLocaleDateString("ar-EG", { 
         year: 'numeric', month: 'long', day: 'numeric'
       }),
@@ -159,9 +186,9 @@ const AdminBlog = () => {
     
     setCurrentPost(newPost);
     setIsEditing(true);
+    setImagePreview("");
   };
 
-  // Category management functions
   const handleAddCategory = () => {
     if (!currentCategory.trim()) {
       toast({
@@ -210,7 +237,6 @@ const AdminBlog = () => {
       cat === categoryToEdit ? currentCategory : cat
     ));
     
-    // Update category in posts
     setPosts(posts.map(post => 
       post.category === categoryToEdit 
         ? { ...post, category: currentCategory }
@@ -231,7 +257,6 @@ const AdminBlog = () => {
     if (window.confirm("هل أنت متأكد من حذف هذه الفئة؟ سيتم إزالة الفئة من جميع المقالات المرتبطة بها.")) {
       setCategories(categories.filter(cat => cat !== category));
       
-      // Update posts that used this category
       setPosts(posts.map(post => 
         post.category === category 
           ? { ...post, category: "" }
@@ -245,7 +270,6 @@ const AdminBlog = () => {
     }
   };
 
-  // If editing or creating a post
   if (isEditing) {
     return (
       <Card className="max-w-3xl mx-auto">
@@ -287,6 +311,48 @@ const AdminBlog = () => {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">صورة المقالة</label>
+              <div className="border rounded-md p-4 space-y-4">
+                {imagePreview ? (
+                  <div className="space-y-4">
+                    <div className="relative aspect-video mx-auto overflow-hidden rounded-md border">
+                      <img 
+                        src={imagePreview} 
+                        alt="Blog post preview" 
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={handleRemoveImage}
+                      className="w-full text-red-500 hover:text-red-700"
+                    >
+                      <Trash className="h-4 w-4 mr-2" />
+                      حذف الصورة
+                    </Button>
+                  </div>
+                ) : (
+                  <div 
+                    className="border-2 border-dashed rounded-md p-8 text-center cursor-pointer hover:bg-gray-50"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <ImageIcon className="h-10 w-10 mx-auto text-gray-400 mb-3" />
+                    <p className="text-sm text-gray-500 mb-1">اضغط لإضافة صورة</p>
+                    <p className="text-xs text-gray-400">PNG, JPG, WEBP حتى 5MB</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
             </div>
             
             <div className="space-y-2">
@@ -347,7 +413,6 @@ const AdminBlog = () => {
             </Button>
           </div>
           
-          {/* Search and filter */}
           <div className="relative">
             <Search className="h-4 w-4 absolute top-3 left-3 text-gray-400" />
             <Input
@@ -358,7 +423,6 @@ const AdminBlog = () => {
             />
           </div>
           
-          {/* Blog posts table */}
           <Card>
             <CardContent className="p-0">
               <Table>
@@ -417,7 +481,6 @@ const AdminBlog = () => {
               </Table>
             </CardContent>
             
-            {/* Pagination */}
             {totalPages > 1 && (
               <CardFooter className="flex justify-between">
                 <Button
@@ -451,7 +514,6 @@ const AdminBlog = () => {
             <h1 className="text-2xl font-bold">إدارة الفئات</h1>
           </div>
           
-          {/* Add/Edit Category Form */}
           <Card>
             <CardHeader>
               <CardTitle>{isEditingCategory ? "تعديل الفئة" : "إضافة فئة جديدة"}</CardTitle>
@@ -484,7 +546,6 @@ const AdminBlog = () => {
             </CardContent>
           </Card>
           
-          {/* Categories List */}
           <Card>
             <CardContent className="p-0">
               <Table>
