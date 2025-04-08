@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminAuth } from "@/components/admin/AdminAuth";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 
@@ -31,16 +32,12 @@ const Admin = () => {
     setIsAuthenticated(false);
   };
 
-  // If user tries to access admin page without authentication
-  if (window.location.pathname.startsWith("/admin") && !isAuthenticated) {
-    // Show login page if at admin root
-    if (window.location.pathname === "/admin") {
-      return <AdminAuth onLogin={handleLogin} />;
-    }
-    // Otherwise redirect to admin login
-    return <Navigate to="/admin" replace />;
+  // If not authenticated, show login page
+  if (!isAuthenticated) {
+    return <AdminAuth onLogin={handleLogin} />;
   }
 
+  // If authenticated, show admin dashboard
   return <AdminDashboard onLogout={handleLogout} />;
 };
 
