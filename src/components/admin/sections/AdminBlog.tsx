@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -92,6 +93,11 @@ const AdminBlog = () => {
   const [currentTab, setCurrentTab] = useState<string>("posts");
   const [imagePreview, setImagePreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Add missing state variables
+  const [currentCategory, setCurrentCategory] = useState<string>("");
+  const [isEditingCategory, setIsEditingCategory] = useState<boolean>(false);
+  const [categoryToEdit, setCategoryToEdit] = useState<string>("");
   
   const { toast } = useToast();
 
