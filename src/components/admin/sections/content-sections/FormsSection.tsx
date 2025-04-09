@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +25,7 @@ type FormSubmission = {
   message: string;
   country?: string;
   created_at: string;
-  status: "new" | "contacted" | "completed";
+  status: "new" | "in-progress" | "completed";
   type?: string;
 };
 
@@ -46,12 +47,12 @@ const FormsSection = () => {
       const { data, error } = await supabase
         .from('consultations')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
         
       if (error) throw error;
       
       // Transform data to match our expected format
-      const formattedData = data?.map(item => ({
+      const formattedData = data?.map((item: any) => ({
         ...item,
         type: 'consultation'
       })) || [];
@@ -73,7 +74,7 @@ const FormsSection = () => {
   const filteredSubmissions = submissions.filter(sub => {
     if (activeTab === "all") return true;
     if (activeTab === "new") return sub.status === "new";
-    if (activeTab === "contacted") return sub.status === "contacted" || sub.status === "in-progress";
+    if (activeTab === "contacted") return sub.status === "in-progress";
     if (activeTab === "completed") return sub.status === "completed";
     if (activeTab === "contact") return sub.type === "contact";
     if (activeTab === "consultation") return sub.type === "consultation";
@@ -81,15 +82,15 @@ const FormsSection = () => {
   });
   
   // Update submission status
-  const updateStatus = async (id: string, status: "new" | "contacted" | "completed") => {
+  const updateStatus = async (id: string, status: "new" | "in-progress" | "completed") => {
     try {
       // Convert "contacted" status to "in-progress" for database consistency
-      const dbStatus = status === "contacted" ? "in-progress" : status;
+      const dbStatus = status;
       
       const { error } = await supabase
         .from('consultations')
         .update({ status: dbStatus })
-        .eq('id', id);
+        .eq('id', id) as any;
         
       if (error) throw error;
       
@@ -123,7 +124,7 @@ const FormsSection = () => {
       const { error } = await supabase
         .from('consultations')
         .delete()
-        .eq('id', id);
+        .eq('id', id) as any;
         
       if (error) throw error;
       
@@ -155,7 +156,7 @@ const FormsSection = () => {
     // Add rows
     filteredSubmissions.forEach(sub => {
       const type = sub.type === "contact" ? "نموذج اتصال" : "طلب استشارة";
-      const status = sub.status === "new" ? "جديد" : sub.status === "contacted" || sub.status === "in-progress" ? "تم التواصل" : "مكتمل";
+      const status = sub.status === "new" ? "جديد" : sub.status === "in-progress" ? "تم التواصل" : "مكتمل";
       
       csvContent += `${sub.id},"${type}","${sub.name}","${sub.email}","${sub.phone}","${sub.subject || ""}","${sub.message?.replace(/"/g, '""')}","${sub.country || ""}","${sub.created_at}","${status}"\n`;
     });
@@ -177,7 +178,6 @@ const FormsSection = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'new': return 'bg-blue-100 text-blue-800';
-      case 'contacted': 
       case 'in-progress': return 'bg-yellow-100 text-yellow-800';
       case 'completed': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -187,7 +187,6 @@ const FormsSection = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'new': return 'جديد';
-      case 'contacted':
       case 'in-progress': return 'تم التواصل';
       case 'completed': return 'مكتمل';
       default: return status;
@@ -216,7 +215,7 @@ const FormsSection = () => {
         <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
           <TabsTrigger value="all">الكل ({submissions.length})</TabsTrigger>
           <TabsTrigger value="new">جديد ({submissions.filter(s => s.status === 'new').length})</TabsTrigger>
-          <TabsTrigger value="contacted">تم التواصل ({submissions.filter(s => s.status === 'contacted' || s.status === 'in-progress').length})</TabsTrigger>
+          <TabsTrigger value="contacted">تم التواصل ({submissions.filter(s => s.status === 'in-progress').length})</TabsTrigger>
           <TabsTrigger value="completed">مكتمل ({submissions.filter(s => s.status === 'completed').length})</TabsTrigger>
           <TabsTrigger value="contact">نموذج اتصال ({submissions.filter(s => s.type === 'contact').length})</TabsTrigger>
           <TabsTrigger value="consultation">طلب استشارة ({submissions.filter(s => s.type === 'consultation').length})</TabsTrigger>
@@ -342,9 +341,9 @@ const FormsSection = () => {
                     جديد
                   </Badge>
                   <Badge 
-                    variant={viewingSubmission.status === "contacted" || viewingSubmission.status === "in-progress" ? "default" : "outline"}
+                    variant={viewingSubmission.status === "in-progress" ? "default" : "outline"}
                     className="cursor-pointer"
-                    onClick={() => updateStatus(viewingSubmission.id, "contacted")}
+                    onClick={() => updateStatus(viewingSubmission.id, "in-progress")}
                   >
                     تم التواصل
                   </Badge>

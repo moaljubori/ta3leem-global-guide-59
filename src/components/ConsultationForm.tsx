@@ -40,7 +40,7 @@ const ConsultationForm = () => {
             subject: formData.subject,
             message: formData.message
           }
-        ]);
+        ] as any);
       
       if (error) throw error;
       

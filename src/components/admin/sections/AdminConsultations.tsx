@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -82,7 +81,7 @@ const AdminConsultations = () => {
       const { data, error } = await supabase
         .from('consultations')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
         
       if (error) throw error;
       
@@ -130,7 +129,7 @@ const AdminConsultations = () => {
         const { error } = await supabase
           .from('consultations')
           .delete()
-          .eq('id', id);
+          .eq('id', id) as any;
           
         if (error) throw error;
         
@@ -161,7 +160,7 @@ const AdminConsultations = () => {
       const { error } = await supabase
         .from('consultations')
         .update({ status })
-        .eq('id', id);
+        .eq('id', id) as any;
         
       if (error) throw error;
       

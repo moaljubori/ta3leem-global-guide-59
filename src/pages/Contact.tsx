@@ -26,7 +26,7 @@ const Contact = () => {
       // Save contact form submission to Supabase
       const { error } = await supabase
         .from('consultations')
-        .insert([data]);
+        .insert([data] as any);
         
       if (error) throw error;
       
