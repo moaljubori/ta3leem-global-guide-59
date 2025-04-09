@@ -3,23 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock database function to store consultation requests
-const addConsultationToDatabase = async (consultationData: any) => {
-  // In a real implementation, this would connect to your backend
-  // For now, we'll store in localStorage to demonstrate the functionality
-  const existingConsultations = JSON.parse(localStorage.getItem('consultations') || '[]');
-  const newConsultation = {
-    id: Date.now(),
-    ...consultationData,
-    date: new Date().toISOString(),
-    status: "new"
-  };
-  
-  existingConsultations.push(newConsultation);
-  localStorage.setItem('consultations', JSON.stringify(existingConsultations));
-  return newConsultation;
-};
+import { supabase } from "@/integrations/supabase/client";
 
 const ConsultationForm = () => {
   const { toast } = useToast();
@@ -45,8 +29,20 @@ const ConsultationForm = () => {
     setIsSubmitting(true);
     
     try {
-      // Save consultation request to our mock database
-      await addConsultationToDatabase(formData);
+      // Save consultation request to Supabase
+      const { error } = await supabase
+        .from('consultations')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            subject: formData.subject,
+            message: formData.message
+          }
+        ]);
+      
+      if (error) throw error;
       
       // Reset form
       setFormData({
@@ -63,6 +59,7 @@ const ConsultationForm = () => {
         description: "سنتواصل معك قريباً",
       });
     } catch (error) {
+      console.error("Error submitting consultation:", error);
       toast({
         title: "حدث خطأ",
         description: "لم نتمكن من إرسال طلبك، يرجى المحاولة مرة أخرى",

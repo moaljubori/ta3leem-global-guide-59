@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import {
   SheetClose
 } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Status badges configuration
 const statusConfig = {
@@ -48,78 +50,54 @@ const statusConfig = {
   },
 };
 
-// Mock consultation requests data for initial state
-const mockConsultations = [
-  {
-    id: 1,
-    name: "محمد عبدالله",
-    email: "mohammed@example.com",
-    phone: "+966 50 123 4567",
-    subject: "استشارة حول الدراسة في كندا",
-    date: "2025-03-21",
-    status: "new", // new, in-progress, completed, rejected
-    message: "مرحبا، أنا مهتم بالدراسة في كندا وأرغب في معرفة المزيد عن الجامعات المتاحة والتكاليف المتوقعة...",
-  },
-  {
-    id: 2,
-    name: "فاطمة أحمد",
-    email: "fatima@example.com",
-    phone: "+966 55 789 0123",
-    subject: "طلب معلومات عن المنح الدراسية",
-    date: "2025-03-19",
-    status: "in-progress",
-    message: "أبحث عن منح دراسية متاحة في الولايات المتحدة للطلاب الدوليين، هل يمكنكم مساعدتي؟",
-  },
-  {
-    id: 3,
-    name: "خالد محمد",
-    email: "khaled@example.com",
-    phone: "+966 56 456 7890",
-    subject: "استفسار حول التأشيرة الدراسية",
-    date: "2025-03-18",
-    status: "completed",
-    message: "لدي بعض الأسئلة حول متطلبات التأشيرة الدراسية للمملكة المتحدة، هل يمكنكم تقديم بعض النصائح؟",
-  },
-  {
-    id: 4,
-    name: "سارة علي",
-    email: "sara@example.com",
-    phone: "+966 58 234 5678",
-    subject: "طلب استشارة للدراسة في ألمانيا",
-    date: "2025-03-15",
-    status: "rejected",
-    message: "مرحبا، أرغب في دراسة الهندسة في ألمانيا وأحتاج إلى معلومات حول الجامعات المتميزة في هذا المجال.",
-  },
-  {
-    id: 5,
-    name: "أحمد حسن",
-    email: "ahmed@example.com",
-    phone: "+966 59 345 6789",
-    subject: "استفسار عن برامج ما بعد التخرج",
-    date: "2025-03-12",
-    status: "new",
-    message: "أرغب في معرفة المزيد عن برامج الدكتوراه المتاحة في أستراليا في مجال الطب.",
-  },
-];
+type Consultation = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  status: "new" | "in-progress" | "completed" | "rejected";
+  created_at: string;
+};
 
 const AdminConsultations = () => {
-  const [consultations, setConsultations] = useState(mockConsultations);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
-  const [selectedConsultation, setSelectedConsultation] = useState<any>(null);
+  const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Load consultations from localStorage on component mount
+  // Load consultations from Supabase on component mount
   useEffect(() => {
-    const storedConsultations = localStorage.getItem("consultations");
-    if (storedConsultations) {
-      const parsedConsultations = JSON.parse(storedConsultations);
-      // Combine mock data with stored consultations
-      setConsultations([...parsedConsultations, ...mockConsultations]);
-    }
+    fetchConsultations();
   }, []);
+
+  const fetchConsultations = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('consultations')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setConsultations(data || []);
+    } catch (error) {
+      console.error('Error fetching consultations:', error);
+      toast({
+        title: "خطأ في جلب البيانات",
+        description: "حدث خطأ أثناء محاولة جلب طلبات الاستشارة",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter consultations based on search query and status
   const filteredConsultations = consultations.filter((consultation) => {
@@ -142,50 +120,74 @@ const AdminConsultations = () => {
   );
   const totalPages = Math.ceil(filteredConsultations.length / itemsPerPage);
 
-  const handleViewConsultation = (consultation: any) => {
+  const handleViewConsultation = (consultation: Consultation) => {
     setSelectedConsultation(consultation);
   };
 
-  const handleDeleteConsultation = (id: number) => {
+  const handleDeleteConsultation = async (id: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
-      const updatedConsultations = consultations.filter((item) => item.id !== id);
-      setConsultations(updatedConsultations);
-      
-      // Update localStorage
-      localStorage.setItem("consultations", JSON.stringify(
-        updatedConsultations.filter(c => !mockConsultations.some(m => m.id === c.id))
-      ));
-      
-      toast({
-        title: "تم الحذف بنجاح",
-        description: "تم حذف طلب الاستشارة بنجاح",
-      });
+      try {
+        const { error } = await supabase
+          .from('consultations')
+          .delete()
+          .eq('id', id);
+          
+        if (error) throw error;
+        
+        setConsultations(prev => prev.filter(item => item.id !== id));
+        
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف طلب الاستشارة بنجاح",
+        });
+        
+        if (selectedConsultation?.id === id) {
+          setSelectedConsultation(null);
+        }
+        
+      } catch (error) {
+        console.error('Error deleting consultation:', error);
+        toast({
+          title: "خطأ في حذف البيانات",
+          description: "حدث خطأ أثناء محاولة حذف طلب الاستشارة",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  const handleStatusChange = (id: number, status: string) => {
-    const updatedConsultations = consultations.map((item) =>
-      item.id === id ? { ...item, status } : item
-    );
-    
-    setConsultations(updatedConsultations);
-    
-    // Update localStorage, excluding mock data
-    localStorage.setItem("consultations", JSON.stringify(
-      updatedConsultations.filter(c => !mockConsultations.some(m => m.id === c.id))
-    ));
-    
-    // If changing the currently viewed consultation
-    if (selectedConsultation && selectedConsultation.id === id) {
-      setSelectedConsultation({...selectedConsultation, status});
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from('consultations')
+        .update({ status })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setConsultations(prev => 
+        prev.map(item => item.id === id ? { ...item, status: status as any } : item)
+      );
+      
+      // If changing the currently viewed consultation
+      if (selectedConsultation && selectedConsultation.id === id) {
+        setSelectedConsultation({...selectedConsultation, status: status as any});
+      }
+      
+      const statusText = statusConfig[status as keyof typeof statusConfig].label;
+      
+      toast({
+        title: "تم تحديث الحالة",
+        description: `تم تغيير حالة الطلب إلى ${statusText}`,
+      });
+    } catch (error) {
+      console.error('Error updating consultation status:', error);
+      toast({
+        title: "خطأ في تحديث البيانات",
+        description: "حدث خطأ أثناء محاولة تحديث حالة طلب الاستشارة",
+        variant: "destructive",
+      });
     }
-    
-    const statusText = statusConfig[status as keyof typeof statusConfig].label;
-    
-    toast({
-      title: "تم تحديث الحالة",
-      description: `تم تغيير حالة الطلب إلى ${statusText}`,
-    });
   };
 
   return (
@@ -227,62 +229,67 @@ const AdminConsultations = () => {
       {/* Consultations table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>الاسم</TableHead>
-                <TableHead>الموضوع</TableHead>
-                <TableHead>التاريخ</TableHead>
-                <TableHead>الحالة</TableHead>
-                <TableHead className="text-right">الإجراءات</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentItems.map((consultation) => (
-                <TableRow key={consultation.id}>
-                  <TableCell className="font-medium">
-                    {consultation.name}
-                  </TableCell>
-                  <TableCell>{consultation.subject}</TableCell>
-                  <TableCell>
-                    {new Date(consultation.date).toLocaleDateString("ar-EG")}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        statusConfig[consultation.status as keyof typeof statusConfig].color
-                      }`}
-                    >
-                      {statusConfig[consultation.status as keyof typeof statusConfig].label}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleViewConsultation(consultation)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteConsultation(consultation.id)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {currentItems.length === 0 && (
+          {isLoading ? (
+            <div className="flex justify-center items-center p-8">
+              <p>جاري تحميل البيانات...</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
-                    لا توجد نتائج مطابقة لبحثك
-                  </TableCell>
+                  <TableHead>الاسم</TableHead>
+                  <TableHead>الموضوع</TableHead>
+                  <TableHead>التاريخ</TableHead>
+                  <TableHead>الحالة</TableHead>
+                  <TableHead className="text-right">الإجراءات</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {currentItems.length > 0 ? currentItems.map((consultation) => (
+                  <TableRow key={consultation.id}>
+                    <TableCell className="font-medium">
+                      {consultation.name}
+                    </TableCell>
+                    <TableCell>{consultation.subject}</TableCell>
+                    <TableCell>
+                      {new Date(consultation.created_at).toLocaleDateString("ar-EG")}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          statusConfig[consultation.status as keyof typeof statusConfig].color
+                        }`}
+                      >
+                        {statusConfig[consultation.status as keyof typeof statusConfig].label}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewConsultation(consultation)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteConsultation(consultation.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-4">
+                      لا توجد نتائج مطابقة لبحثك
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
 
         {/* Pagination */}
@@ -407,7 +414,7 @@ const AdminConsultations = () => {
                       <div>
                         <span className="text-sm text-gray-500">تاريخ الطلب</span>
                         <p>
-                          {new Date(selectedConsultation.date).toLocaleDateString(
+                          {new Date(selectedConsultation.created_at).toLocaleDateString(
                             "ar-EG",
                             {
                               year: "numeric",

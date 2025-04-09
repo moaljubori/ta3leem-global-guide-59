@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -13,65 +12,68 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Eye, Trash, Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type FormSubmission = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
   subject?: string;
   message: string;
   country?: string;
-  date: string;
+  created_at: string;
   status: "new" | "contacted" | "completed";
-  type: "contact" | "consultation";
+  type?: string;
 };
 
 const FormsSection = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("all");
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [viewingSubmission, setViewingSubmission] = useState<FormSubmission | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Load stored submissions on component mount
   useEffect(() => {
-    // Get contact form submissions
-    const storedContactSubmissions = localStorage.getItem('contactSubmissions') || '[]';
-    
-    // Get consultation form submissions
-    const storedConsultations = localStorage.getItem('consultations') || '[]';
-    
+    fetchSubmissions();
+  }, []);
+
+  const fetchSubmissions = async () => {
+    setIsLoading(true);
     try {
-      const contactSubmissions = JSON.parse(storedContactSubmissions);
-      const consultationSubmissions = JSON.parse(storedConsultations);
+      const { data, error } = await supabase
+        .from('consultations')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
       
-      // Combine all submissions with proper typing
-      const allSubmissions: FormSubmission[] = [
-        ...contactSubmissions.map((sub: any) => ({
-          ...sub,
-          type: 'contact' as const
-        })),
-        ...consultationSubmissions.map((sub: any) => ({
-          ...sub,
-          type: 'consultation' as const
-        }))
-      ];
+      // Transform data to match our expected format
+      const formattedData = data?.map(item => ({
+        ...item,
+        type: 'consultation'
+      })) || [];
       
-      // Sort by date descending
-      allSubmissions.sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      });
-      
-      setSubmissions(allSubmissions);
+      setSubmissions(formattedData);
     } catch (error) {
       console.error("Error loading form submissions:", error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "حدث خطأ أثناء محاولة تحميل البيانات",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  };
   
   // Filter submissions based on active tab
   const filteredSubmissions = submissions.filter(sub => {
     if (activeTab === "all") return true;
     if (activeTab === "new") return sub.status === "new";
-    if (activeTab === "contacted") return sub.status === "contacted";
+    if (activeTab === "contacted") return sub.status === "contacted" || sub.status === "in-progress";
     if (activeTab === "completed") return sub.status === "completed";
     if (activeTab === "contact") return sub.type === "contact";
     if (activeTab === "consultation") return sub.type === "consultation";
@@ -79,40 +81,69 @@ const FormsSection = () => {
   });
   
   // Update submission status
-  const updateStatus = (id: number, status: "new" | "contacted" | "completed") => {
-    const updatedSubmissions = submissions.map(sub => 
-      sub.id === id ? { ...sub, status } : sub
-    );
-    setSubmissions(updatedSubmissions);
-    
-    // Update in localStorage based on type
-    const contactSubmissions = updatedSubmissions.filter(sub => sub.type === 'contact');
-    const consultationSubmissions = updatedSubmissions.filter(sub => sub.type === 'consultation');
-    
-    localStorage.setItem('contactSubmissions', JSON.stringify(contactSubmissions));
-    localStorage.setItem('consultations', JSON.stringify(consultationSubmissions));
-    
-    if (viewingSubmission && viewingSubmission.id === id) {
-      setViewingSubmission({ ...viewingSubmission, status });
+  const updateStatus = async (id: string, status: "new" | "contacted" | "completed") => {
+    try {
+      // Convert "contacted" status to "in-progress" for database consistency
+      const dbStatus = status === "contacted" ? "in-progress" : status;
+      
+      const { error } = await supabase
+        .from('consultations')
+        .update({ status: dbStatus })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setSubmissions(submissions.map(sub => 
+        sub.id === id ? { ...sub, status } : sub
+      ));
+      
+      if (viewingSubmission && viewingSubmission.id === id) {
+        setViewingSubmission({ ...viewingSubmission, status });
+      }
+      
+      toast({
+        title: "تم تحديث الحالة",
+        description: `تم تحديث حالة الطلب بنجاح`,
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "خطأ في تحديث البيانات",
+        description: "حدث خطأ أثناء محاولة تحديث حالة الطلب",
+        variant: "destructive",
+      });
     }
   };
   
   // Delete submission
-  const deleteSubmission = (id: number) => {
+  const deleteSubmission = async (id: string) => {
     if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
     
-    const updatedSubmissions = submissions.filter(sub => sub.id !== id);
-    setSubmissions(updatedSubmissions);
-    
-    // Update in localStorage based on type
-    const contactSubmissions = updatedSubmissions.filter(sub => sub.type === 'contact');
-    const consultationSubmissions = updatedSubmissions.filter(sub => sub.type === 'consultation');
-    
-    localStorage.setItem('contactSubmissions', JSON.stringify(contactSubmissions));
-    localStorage.setItem('consultations', JSON.stringify(consultationSubmissions));
-    
-    if (viewingSubmission && viewingSubmission.id === id) {
-      setViewingSubmission(null);
+    try {
+      const { error } = await supabase
+        .from('consultations')
+        .delete()
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setSubmissions(submissions.filter(sub => sub.id !== id));
+      
+      if (viewingSubmission && viewingSubmission.id === id) {
+        setViewingSubmission(null);
+      }
+      
+      toast({
+        title: "تم الحذف بنجاح",
+        description: "تم حذف الطلب بنجاح",
+      });
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      toast({
+        title: "خطأ في حذف البيانات",
+        description: "حدث خطأ أثناء محاولة حذف الطلب",
+        variant: "destructive",
+      });
     }
   };
   
@@ -124,9 +155,9 @@ const FormsSection = () => {
     // Add rows
     filteredSubmissions.forEach(sub => {
       const type = sub.type === "contact" ? "نموذج اتصال" : "طلب استشارة";
-      const status = sub.status === "new" ? "جديد" : sub.status === "contacted" ? "تم التواصل" : "مكتمل";
+      const status = sub.status === "new" ? "جديد" : sub.status === "contacted" || sub.status === "in-progress" ? "تم التواصل" : "مكتمل";
       
-      csvContent += `${sub.id},"${type}","${sub.name}","${sub.email}","${sub.phone}","${sub.subject || ""}","${sub.message?.replace(/"/g, '""')}","${sub.country || ""}","${sub.date}","${status}"\n`;
+      csvContent += `${sub.id},"${type}","${sub.name}","${sub.email}","${sub.phone}","${sub.subject || ""}","${sub.message?.replace(/"/g, '""')}","${sub.country || ""}","${sub.created_at}","${status}"\n`;
     });
     
     // Create download link
@@ -146,7 +177,8 @@ const FormsSection = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'new': return 'bg-blue-100 text-blue-800';
-      case 'contacted': return 'bg-yellow-100 text-yellow-800';
+      case 'contacted': 
+      case 'in-progress': return 'bg-yellow-100 text-yellow-800';
       case 'completed': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -155,7 +187,8 @@ const FormsSection = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'new': return 'جديد';
-      case 'contacted': return 'تم التواصل';
+      case 'contacted':
+      case 'in-progress': return 'تم التواصل';
       case 'completed': return 'مكتمل';
       default: return status;
     }
@@ -183,7 +216,7 @@ const FormsSection = () => {
         <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full">
           <TabsTrigger value="all">الكل ({submissions.length})</TabsTrigger>
           <TabsTrigger value="new">جديد ({submissions.filter(s => s.status === 'new').length})</TabsTrigger>
-          <TabsTrigger value="contacted">تم التواصل ({submissions.filter(s => s.status === 'contacted').length})</TabsTrigger>
+          <TabsTrigger value="contacted">تم التواصل ({submissions.filter(s => s.status === 'contacted' || s.status === 'in-progress').length})</TabsTrigger>
           <TabsTrigger value="completed">مكتمل ({submissions.filter(s => s.status === 'completed').length})</TabsTrigger>
           <TabsTrigger value="contact">نموذج اتصال ({submissions.filter(s => s.type === 'contact').length})</TabsTrigger>
           <TabsTrigger value="consultation">طلب استشارة ({submissions.filter(s => s.type === 'consultation').length})</TabsTrigger>
@@ -192,7 +225,11 @@ const FormsSection = () => {
         <TabsContent value={activeTab} className="mt-4">
           <Card>
             <CardContent className="p-0 overflow-x-auto">
-              {filteredSubmissions.length > 0 ? (
+              {isLoading ? (
+                <div className="py-8 text-center">
+                  جاري تحميل البيانات...
+                </div>
+              ) : filteredSubmissions.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -209,12 +246,12 @@ const FormsSection = () => {
                   <TableBody>
                     {filteredSubmissions.map((submission) => (
                       <TableRow key={submission.id}>
-                        <TableCell>{submission.id}</TableCell>
-                        <TableCell>{getTypeText(submission.type)}</TableCell>
+                        <TableCell>{submission.id.substring(0, 8)}...</TableCell>
+                        <TableCell>{getTypeText(submission.type || 'consultation')}</TableCell>
                         <TableCell>{submission.name}</TableCell>
                         <TableCell className="font-mono text-xs">{submission.email}</TableCell>
                         <TableCell dir="ltr">{submission.phone}</TableCell>
-                        <TableCell>{new Date(submission.date).toLocaleDateString('ar-SA')}</TableCell>
+                        <TableCell>{new Date(submission.created_at).toLocaleDateString('ar-SA')}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(submission.status)}`}>
                             {getStatusText(submission.status)}
@@ -248,9 +285,9 @@ const FormsSection = () => {
       <Dialog open={!!viewingSubmission} onOpenChange={(open) => !open && setViewingSubmission(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>تفاصيل الطلب #{viewingSubmission?.id}</DialogTitle>
+            <DialogTitle>تفاصيل الطلب #{viewingSubmission?.id.substring(0, 8)}...</DialogTitle>
             <DialogDescription>
-              {getTypeText(viewingSubmission?.type || '')} - {new Date(viewingSubmission?.date || '').toLocaleString('ar-SA')}
+              {getTypeText(viewingSubmission?.type || 'consultation')} - {new Date(viewingSubmission?.created_at || '').toLocaleString('ar-SA')}
             </DialogDescription>
           </DialogHeader>
           
@@ -305,7 +342,7 @@ const FormsSection = () => {
                     جديد
                   </Badge>
                   <Badge 
-                    variant={viewingSubmission.status === "contacted" ? "default" : "outline"}
+                    variant={viewingSubmission.status === "contacted" || viewingSubmission.status === "in-progress" ? "default" : "outline"}
                     className="cursor-pointer"
                     onClick={() => updateStatus(viewingSubmission.id, "contacted")}
                   >

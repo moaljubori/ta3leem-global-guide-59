@@ -1,35 +1,58 @@
-
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, MapPin, MessageSquare, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const { toast } = useToast();
   const [formSubmitted, setFormSubmitted] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission logic would go here
-    console.log("Form submitted");
     
-    // Show success toast
-    toast({
-      title: "تم إرسال رسالتك بنجاح",
-      description: "سيتواصل فريقنا معك قريباً",
-    });
-    
-    setFormSubmitted(true);
-    
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setFormSubmitted(false);
-      // Reset the form
-      const form = e.target as HTMLFormElement;
-      form.reset();
-    }, 3000);
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const data = {
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        phone: formData.get('phone') as string,
+        subject: formData.get('subject') as string,
+        message: formData.get('message') as string
+      };
+      
+      // Save contact form submission to Supabase
+      const { error } = await supabase
+        .from('consultations')
+        .insert([data]);
+        
+      if (error) throw error;
+      
+      // Show success toast
+      toast({
+        title: "تم إرسال رسالتك بنجاح",
+        description: "سيتواصل فريقنا معك قريباً",
+      });
+      
+      setFormSubmitted(true);
+      
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setFormSubmitted(false);
+        // Reset the form
+        const form = e.target as HTMLFormElement;
+        form.reset();
+      }, 3000);
+    } catch (error) {
+      console.error("Error submitting contact form:", error);
+      toast({
+        title: "حدث خطأ",
+        description: "لم نتمكن من إرسال رسالتك، يرجى المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    }
   };
   
   const handleWhatsAppClick = () => {
@@ -243,7 +266,6 @@ const Contact = () => {
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold mb-6 text-blue-800 text-center">موقعنا</h2>
             <div className="h-96 bg-gray-200 rounded-lg overflow-hidden">
-              {/* An actual map would be integrated here */}
               <div className="w-full h-full flex items-center justify-center bg-gray-300">
                 <MapPin className="h-12 w-12 text-blue-600 ml-2" />
                 <p className="text-xl text-gray-600">خريطة الموقع</p>
