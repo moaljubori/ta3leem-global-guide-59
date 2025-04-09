@@ -7,8 +7,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUploadField } from "../utils/ImageUploadField";
 
+// Define interface for hero data that includes the optional imageFile
+interface HeroData {
+  title: string;
+  subtitle: string;
+  buttonText: string;
+  buttonLink: string;
+  backgroundImage: string;
+  imageFile?: File;
+}
+
 // Default hero data
-const defaultHeroData = {
+const defaultHeroData: HeroData = {
   title: "رحلتك التعليمية تبدأ هنا",
   subtitle: "نساعدك في الحصول على القبول في أفضل الجامعات العالمية",
   buttonText: "تواصل معنا",
@@ -18,7 +28,7 @@ const defaultHeroData = {
 
 const HeroSection = () => {
   const { toast } = useToast();
-  const [hero, setHero] = useState(defaultHeroData);
+  const [hero, setHero] = useState<HeroData>(defaultHeroData);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Load data from local storage on component mount
@@ -52,7 +62,7 @@ const HeroSection = () => {
   const handleRemoveImage = () => {
     setHero({
       ...hero,
-      imageFile: null,
+      imageFile: undefined,
       backgroundImage: ""
     });
     

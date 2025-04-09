@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { Trash } from "lucide-react";
 
 // Default contact data
 const defaultContactData = {
@@ -170,7 +170,7 @@ const ContactSection = () => {
               rows={3}
               dir="ltr"
             />
-            <p className="text-xs text-gray-500">أدخل رابط تضمين الخريطة من Google Maps لعرض الموقع في صفحة الاتصال</p>
+            <p className="text-xs text-gray-500">أدخ�� رابط تضمين الخريطة من Google Maps لعرض الموقع في صفحة الاتصال</p>
           </div>
         </CardContent>
         <CardFooter>

@@ -6,9 +6,32 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ImageUploadField } from "../utils/ImageUploadField";
+import { Trash, ImageIcon, Pencil } from "lucide-react";
+
+// Define a proper type for aboutData that includes the optional imageFile
+interface TeamMember {
+  id: number;
+  name: string;
+  position: string;
+  image: string;
+  bio: string;
+  imageFile?: File;
+}
+
+interface AboutData {
+  title: string;
+  subtitle: string;
+  description: string;
+  mission: string;
+  vision: string;
+  values: string[];
+  teamMembers: TeamMember[];
+  image: string;
+  imageFile?: File;
+}
 
 // Default about data
-const defaultAboutData = {
+const defaultAboutData: AboutData = {
   title: "من نحن",
   subtitle: "شريكك الموثوق للدراسة في الخارج",
   description: "تعليم جلوبال هي شركة متخصصة في تقديم الاستشارات التعليمية للطلاب الراغبين في الدراسة بالخارج. نساعدك في اختيار البرنامج والجامعة المناسبة وإكمال إجراءات القبول والحصول على التأشيرة.",
@@ -42,9 +65,9 @@ const defaultAboutData = {
 
 const AboutSection = () => {
   const { toast } = useToast();
-  const [aboutData, setAboutData] = useState(defaultAboutData);
+  const [aboutData, setAboutData] = useState<AboutData>(defaultAboutData);
   const [newValue, setNewValue] = useState("");
-  const [editingTeamMember, setEditingTeamMember] = useState<any>(null);
+  const [editingTeamMember, setEditingTeamMember] = useState<TeamMember | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const memberImageRef = useRef<HTMLInputElement>(null);
 
@@ -80,7 +103,7 @@ const AboutSection = () => {
   const handleRemoveImage = () => {
     setAboutData({
       ...aboutData,
-      imageFile: null,
+      imageFile: undefined,
       image: ""
     });
     
