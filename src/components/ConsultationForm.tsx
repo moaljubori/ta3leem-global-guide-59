@@ -12,7 +12,7 @@ const addConsultationToDatabase = async (consultationData: any) => {
   const newConsultation = {
     id: Date.now(),
     ...consultationData,
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString(),
     status: "new"
   };
   
