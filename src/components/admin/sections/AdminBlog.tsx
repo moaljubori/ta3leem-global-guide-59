@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,69 +22,17 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-
-const mockBlogPosts = [
-  {
-    id: 1,
-    title: "أفضل 10 جامعات في كندا للطلاب الدوليين",
-    category: "كندا",
-    content: "محتوى المقالة عن الجامعات الكندية وفرصها للطلاب الدوليين...",
-    date: "21 مارس 2025",
-    published: true,
-  },
-  {
-    id: 2,
-    title: "كيف تحصل على منحة دراسية في الولايات المتحدة",
-    category: "المنح الدراسية",
-    content: "محتوى المقالة عن كيفية الحصول على منح دراسية في الولايات المتحدة...",
-    date: "15 مارس 2025",
-    published: true,
-  },
-  {
-    id: 3,
-    title: "دليل شامل للتأشيرة الدراسية البريطانية",
-    category: "التأشيرات",
-    content: "محتوى المقالة عن طريقة الحصول على التأشيرة الدراسية البريطانية...",
-    date: "8 مارس 2025",
-    published: true,
-  },
-  {
-    id: 4,
-    title: "نصائح للدراسة في ألمانيا",
-    category: "ألمانيا",
-    content: "محتوى المقالة عن نصائح مفيدة للطلاب الراغبين بالدراسة في ألمانيا...",
-    date: "1 مارس 2025",
-    published: false,
-  },
-  {
-    id: 5,
-    title: "مقارنة بين الدراسة في أستراليا ونيوزيلندا",
-    category: "أستراليا",
-    content: "محتوى المقالة عن مقارنة بين نظام التعليم في أستراليا ونيوزيلندا...",
-    date: "25 فبراير 2025",
-    published: true,
-  },
-];
-
-const initialCategories = ["كندا", "المنح الدراسية", "التأشيرات", "ألمانيا", "أستراليا"];
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminBlog = () => {
-  const [posts, setPosts] = useState(mockBlogPosts);
-  const [categories, setCategories] = useState(initialCategories);
+  const { toast } = useToast();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -92,6 +40,7 @@ const AdminBlog = () => {
   const [currentPost, setCurrentPost] = useState<any>(null);
   const [currentTab, setCurrentTab] = useState<string>("posts");
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Add missing state variables
@@ -99,7 +48,60 @@ const AdminBlog = () => {
   const [isEditingCategory, setIsEditingCategory] = useState<boolean>(false);
   const [categoryToEdit, setCategoryToEdit] = useState<string>("");
   
-  const { toast } = useToast();
+  // Fetch posts and categories from Supabase
+  useEffect(() => {
+    if (currentTab === "posts") {
+      fetchPosts();
+    } else if (currentTab === "categories") {
+      fetchCategories();
+    }
+  }, [currentTab]);
+
+  async function fetchPosts() {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      setPosts(data || []);
+    } catch (error) {
+      console.error("Error fetching blog posts:", error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "لم نتمكن من تحميل المقالات",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchCategories() {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('blog_categories')
+        .select('*')
+        .order('name', { ascending: true });
+        
+      if (error) throw error;
+      
+      setCategories((data || []).map(cat => cat.name));
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "لم نتمكن من تحميل التصنيفات",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filteredPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -121,7 +123,7 @@ const AdminBlog = () => {
         setCurrentPost({
           ...currentPost,
           imageFile: file,
-          imageUrl: imageUrl
+          image_url: imageUrl
         });
       }
     }
@@ -133,7 +135,7 @@ const AdminBlog = () => {
       setCurrentPost({
         ...currentPost,
         imageFile: null,
-        imageUrl: ""
+        image_url: ""
       });
     }
     
@@ -142,33 +144,108 @@ const AdminBlog = () => {
     }
   };
 
-  const handleEdit = (post: any) => {
-    setCurrentPost(post);
-    setImagePreview(post.imageUrl || "");
-    setIsEditing(true);
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) {
-      setPosts(posts.filter(post => post.id !== id));
-      toast({
-        title: "تم الحذف بنجاح",
-        description: "تم حذف المقالة بنجاح",
-      });
+  const uploadImage = async (file: File) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `blog/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('public')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      const { data } = supabase.storage.from('public').getPublicUrl(filePath);
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleEdit = (post: any) => {
+    setCurrentPost(post);
+    setImagePreview(post.image_url || "");
+    setIsEditing(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) {
+      try {
+        const { error } = await supabase
+          .from('blog_posts')
+          .delete()
+          .eq('id', id);
+          
+        if (error) throw error;
+        
+        await fetchPosts();
+        
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف المقالة بنجاح",
+        });
+      } catch (error) {
+        console.error("Error deleting post:", error);
+        toast({
+          title: "خطأ في الحذف",
+          description: "لم نتمكن من حذف المقالة",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (currentPost) {
-      setPosts(posts.map(post => 
-        post.id === currentPost.id ? currentPost : post
-      ));
-      
+    try {
+      if (currentPost) {
+        // Handle image upload if there's a new image
+        if (currentPost.imageFile) {
+          const imageUrl = await uploadImage(currentPost.imageFile);
+          currentPost.image_url = imageUrl;
+        }
+        
+        // Remove imageFile before saving to database
+        const { imageFile, ...postToSave } = currentPost;
+        
+        // Set created_at for new posts
+        if (!postToSave.id) {
+          postToSave.created_at = new Date().toISOString();
+        }
+        
+        if (postToSave.id) {
+          // Update existing post
+          const { error } = await supabase
+            .from('blog_posts')
+            .update(postToSave)
+            .eq('id', postToSave.id);
+            
+          if (error) throw error;
+        } else {
+          // Create new post
+          const { error } = await supabase
+            .from('blog_posts')
+            .insert([postToSave]);
+            
+          if (error) throw error;
+        }
+        
+        await fetchPosts();
+        
+        toast({
+          title: "تم الحفظ بنجاح",
+          description: "تم حفظ التغييرات بنجاح",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving post:", error);
       toast({
-        title: "تم الحفظ بنجاح",
-        description: "تم حفظ التغييرات بنجاح",
+        title: "خطأ في الحفظ",
+        description: "لم نتمكن من حفظ المقالة",
+        variant: "destructive",
       });
     }
     
@@ -179,14 +256,11 @@ const AdminBlog = () => {
 
   const handleCreate = () => {
     const newPost = {
-      id: Date.now(),
       title: "",
       category: "",
       content: "",
-      imageUrl: "",
-      date: new Date().toLocaleDateString("ar-EG", { 
-        year: 'numeric', month: 'long', day: 'numeric'
-      }),
+      image_url: "",
+      excerpt: "",
       published: false,
     };
     
@@ -195,7 +269,7 @@ const AdminBlog = () => {
     setImagePreview("");
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!currentCategory.trim()) {
       toast({
         title: "خطأ",
@@ -214,13 +288,30 @@ const AdminBlog = () => {
       return;
     }
 
-    setCategories([...categories, currentCategory]);
-    setCurrentCategory("");
-    
-    toast({
-      title: "تمت الإضافة بنجاح",
-      description: "تمت إضافة الفئة بنجاح",
-    });
+    try {
+      const { error } = await supabase
+        .from('blog_categories')
+        .insert([{ name: currentCategory }]);
+        
+      if (error) throw error;
+      
+      // Refresh categories
+      await fetchCategories();
+      
+      setCurrentCategory("");
+      
+      toast({
+        title: "تمت الإضافة بنجاح",
+        description: "تمت إضافة الفئة بنجاح",
+      });
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast({
+        title: "خطأ في الإضافة",
+        description: "لم نتمكن من إضافة الفئة",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditCategory = (category: string) => {
@@ -229,7 +320,7 @@ const AdminBlog = () => {
     setIsEditingCategory(true);
   };
 
-  const handleSaveCategory = () => {
+  const handleSaveCategory = async () => {
     if (!currentCategory.trim()) {
       toast({
         title: "خطأ",
@@ -239,40 +330,96 @@ const AdminBlog = () => {
       return;
     }
 
-    setCategories(categories.map(cat => 
-      cat === categoryToEdit ? currentCategory : cat
-    ));
-    
-    setPosts(posts.map(post => 
-      post.category === categoryToEdit 
-        ? { ...post, category: currentCategory }
-        : post
-    ));
-
-    setCurrentCategory("");
-    setIsEditingCategory(false);
-    setCategoryToEdit("");
-    
-    toast({
-      title: "تم التعديل بنجاح",
-      description: "تم تعديل الفئة بنجاح",
-    });
+    try {
+      // Find the category ID
+      const { data, error: findError } = await supabase
+        .from('blog_categories')
+        .select('id')
+        .eq('name', categoryToEdit)
+        .single();
+        
+      if (findError) throw findError;
+      
+      // Update the category
+      const { error } = await supabase
+        .from('blog_categories')
+        .update({ name: currentCategory })
+        .eq('id', data.id);
+        
+      if (error) throw error;
+      
+      // Also update all blog posts with this category
+      const { error: postsError } = await supabase
+        .from('blog_posts')
+        .update({ category: currentCategory })
+        .eq('category', categoryToEdit);
+        
+      if (postsError) throw postsError;
+      
+      // Refresh categories
+      await fetchCategories();
+      
+      setCurrentCategory("");
+      setIsEditingCategory(false);
+      setCategoryToEdit("");
+      
+      toast({
+        title: "تم التعديل بنجاح",
+        description: "تم تعديل الفئة بنجاح",
+      });
+    } catch (error) {
+      console.error("Error updating category:", error);
+      toast({
+        title: "خطأ في التعديل",
+        description: "لم نتمكن من تعديل الفئة",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteCategory = (category: string) => {
+  const handleDeleteCategory = async (category: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذه الفئة؟ سيتم إزالة الفئة من جميع المقالات المرتبطة بها.")) {
-      setCategories(categories.filter(cat => cat !== category));
-      
-      setPosts(posts.map(post => 
-        post.category === category 
-          ? { ...post, category: "" }
-          : post
-      ));
-
-      toast({
-        title: "تم الحذف بنجاح",
-        description: "تم حذف الفئة بنجاح",
-      });
+      try {
+        // Find the category ID
+        const { data, error: findError } = await supabase
+          .from('blog_categories')
+          .select('id')
+          .eq('name', category)
+          .single();
+          
+        if (findError) throw findError;
+        
+        // Update all blog posts with this category to empty string
+        const { error: postsError } = await supabase
+          .from('blog_posts')
+          .update({ category: "" })
+          .eq('category', category);
+          
+        if (postsError) throw postsError;
+        
+        // Delete the category
+        const { error } = await supabase
+          .from('blog_categories')
+          .delete()
+          .eq('id', data.id);
+          
+        if (error) throw error;
+        
+        // Refresh categories
+        await fetchCategories();
+        
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الفئة بنجاح",
+        });
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        toast({
+          title: "خطأ في الحذف",
+          description: "لم نتمكن من حذف الفئة",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -317,6 +464,18 @@ const AdminBlog = () => {
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="excerpt" className="text-sm font-medium">
+                مقتطف
+              </label>
+              <Textarea
+                id="excerpt"
+                value={currentPost.excerpt}
+                onChange={e => setCurrentPost({...currentPost, excerpt: e.target.value})}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -431,63 +590,74 @@ const AdminBlog = () => {
           
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>العنوان</TableHead>
-                    <TableHead>الفئة</TableHead>
-                    <TableHead>التاريخ</TableHead>
-                    <TableHead>الحالة</TableHead>
-                    <TableHead className="text-right">الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentPosts.map((post) => (
-                    <TableRow key={post.id}>
-                      <TableCell className="font-medium">{post.title}</TableCell>
-                      <TableCell>{post.category}</TableCell>
-                      <TableCell>{post.date}</TableCell>
-                      <TableCell>
-                        <span 
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            post.published 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {post.published ? "منشور" : "مسودة"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleEdit(post)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleDelete(post.id)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {currentPosts.length === 0 && (
+              {loading ? (
+                <div className="py-8 text-center">جاري التحميل...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-4">
-                        لا توجد نتائج مطابقة لبحثك
-                      </TableCell>
+                      <TableHead>العنوان</TableHead>
+                      <TableHead>الفئة</TableHead>
+                      <TableHead>التاريخ</TableHead>
+                      <TableHead>الحالة</TableHead>
+                      <TableHead className="text-right">الإجراءات</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {currentPosts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-4">
+                          لا توجد نتائج مطابقة لبحثك
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      currentPosts.map((post) => (
+                        <TableRow key={post.id}>
+                          <TableCell className="font-medium">{post.title}</TableCell>
+                          <TableCell>{post.category}</TableCell>
+                          <TableCell>
+                            {new Date(post.created_at).toLocaleDateString("ar-EG", {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </TableCell>
+                          <TableCell>
+                            <span 
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                post.published 
+                                  ? "bg-green-100 text-green-800" 
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {post.published ? "منشور" : "مسودة"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEdit(post)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDelete(post.id)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
             
-            {totalPages > 1 && (
+            {totalPages > 1 && !loading && (
               <CardFooter className="flex justify-between">
                 <Button
                   variant="outline"
@@ -554,53 +724,58 @@ const AdminBlog = () => {
           
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>اسم الفئة</TableHead>
-                    <TableHead>عدد المقالات</TableHead>
-                    <TableHead className="text-right">الإجراءات</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categories.map((category) => (
-                    <TableRow key={category}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center">
-                          <Tag className="h-4 w-4 mr-2" />
-                          {category}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {posts.filter(post => post.category === category).length}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleEditCategory(category)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleDeleteCategory(category)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {categories.length === 0 && (
+              {loading ? (
+                <div className="py-8 text-center">جاري التحميل...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={3} className="text-center py-4">
-                        لا توجد فئات
-                      </TableCell>
+                      <TableHead>اسم الفئة</TableHead>
+                      <TableHead>عدد المقالات</TableHead>
+                      <TableHead className="text-right">الإجراءات</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-4">
+                          لا توجد فئات
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      categories.map((category) => (
+                        <TableRow key={category}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center">
+                              <Tag className="h-4 w-4 mr-2" />
+                              {category}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {posts.filter(post => post.category === category).length}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditCategory(category)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteCategory(category)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
