@@ -131,7 +131,7 @@ const AboutSection = () => {
     if (editingTeamMember) {
       setEditingTeamMember({
         ...editingTeamMember,
-        imageFile: null,
+        imageFile: undefined,
         image: ""
       });
     }
@@ -367,7 +367,13 @@ const AboutSection = () => {
             </div>
           ) : (
             <>
-              <Button onClick={() => setEditingTeamMember({})}>
+              <Button onClick={() => setEditingTeamMember({
+                id: 0,
+                name: "",
+                position: "",
+                image: "",
+                bio: ""
+              })}>
                 إضافة عضو جديد
               </Button>
               
