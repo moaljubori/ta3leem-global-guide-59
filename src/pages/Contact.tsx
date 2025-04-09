@@ -1,3 +1,4 @@
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -20,13 +21,14 @@ const Contact = () => {
         email: formData.get('email') as string,
         phone: formData.get('phone') as string,
         subject: formData.get('subject') as string,
-        message: formData.get('message') as string
+        message: formData.get('message') as string,
+        status: 'new'
       };
       
       // Save contact form submission to Supabase
       const { error } = await supabase
         .from('consultations')
-        .insert([data] as any);
+        .insert([data]);
         
       if (error) throw error;
       

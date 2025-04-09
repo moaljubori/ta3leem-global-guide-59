@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -81,11 +82,11 @@ const AdminConsultations = () => {
       const { data, error } = await supabase
         .from('consultations')
         .select('*')
-        .order('created_at', { ascending: false }) as any;
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
       
-      setConsultations(data || []);
+      setConsultations((data || []) as Consultation[]);
     } catch (error) {
       console.error('Error fetching consultations:', error);
       toast({
@@ -129,7 +130,7 @@ const AdminConsultations = () => {
         const { error } = await supabase
           .from('consultations')
           .delete()
-          .eq('id', id) as any;
+          .eq('id', id);
           
         if (error) throw error;
         
@@ -160,7 +161,7 @@ const AdminConsultations = () => {
       const { error } = await supabase
         .from('consultations')
         .update({ status })
-        .eq('id', id) as any;
+        .eq('id', id);
         
       if (error) throw error;
       

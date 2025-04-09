@@ -38,9 +38,10 @@ const ConsultationForm = () => {
             email: formData.email,
             phone: formData.phone,
             subject: formData.subject,
-            message: formData.message
+            message: formData.message,
+            status: 'new'
           }
-        ] as any);
+        ]);
       
       if (error) throw error;
       

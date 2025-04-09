@@ -47,15 +47,15 @@ const FormsSection = () => {
       const { data, error } = await supabase
         .from('consultations')
         .select('*')
-        .order('created_at', { ascending: false }) as any;
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
       
       // Transform data to match our expected format
-      const formattedData = data?.map((item: any) => ({
+      const formattedData = (data || []).map((item: any) => ({
         ...item,
         type: 'consultation'
-      })) || [];
+      }));
       
       setSubmissions(formattedData);
     } catch (error) {
@@ -90,7 +90,7 @@ const FormsSection = () => {
       const { error } = await supabase
         .from('consultations')
         .update({ status: dbStatus })
-        .eq('id', id) as any;
+        .eq('id', id);
         
       if (error) throw error;
       
@@ -124,7 +124,7 @@ const FormsSection = () => {
       const { error } = await supabase
         .from('consultations')
         .delete()
-        .eq('id', id) as any;
+        .eq('id', id);
         
       if (error) throw error;
       
