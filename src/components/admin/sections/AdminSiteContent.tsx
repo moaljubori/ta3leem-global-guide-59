@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -813,4 +814,44 @@ const AdminSiteContent = () => {
                       <TableHead>الصورة</TableHead>
                       <TableHead>العنوان</TableHead>
                       <TableHead>المقتطف</TableHead>
-                      <TableHead className="
+                      <TableHead className="text-right">الإجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {blogPreviews.map((blogPreview) => (
+                      <TableRow key={blogPreview.id}>
+                        <TableCell>
+                          <div className="w-16 h-10 rounded overflow-hidden">
+                            {blogPreview.image ? (
+                              <img src={blogPreview.image} alt={blogPreview.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                <ImageIcon className="h-5 w-5 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{blogPreview.title}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{blogPreview.excerpt}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => setEditingBlogPreview(blogPreview)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => deleteBlogPreview(blogPreview.id)}>
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default AdminSiteContent;
