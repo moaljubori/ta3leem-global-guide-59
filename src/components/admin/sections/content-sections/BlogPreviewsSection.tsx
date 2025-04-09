@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -140,7 +139,7 @@ const BlogPreviewsSection = () => {
     }
   };
 
-  const deleteBlogPreview = async (id: number) => {
+  const deleteBlogPreview = async (id: string) => {
     if (window.confirm("هل أنت متأكد من حذف معاينة المقالة؟")) {
       try {
         const { error } = await supabase

@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,12 +42,10 @@ const AdminBlog = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Add missing state variables
   const [currentCategory, setCurrentCategory] = useState<string>("");
   const [isEditingCategory, setIsEditingCategory] = useState<boolean>(false);
   const [categoryToEdit, setCategoryToEdit] = useState<string>("");
   
-  // Fetch posts and categories from Supabase
   useEffect(() => {
     if (currentTab === "posts") {
       fetchPosts();
@@ -170,7 +167,7 @@ const AdminBlog = () => {
     setIsEditing(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذه المقالة؟")) {
       try {
         const { error } = await supabase
@@ -202,22 +199,18 @@ const AdminBlog = () => {
     
     try {
       if (currentPost) {
-        // Handle image upload if there's a new image
         if (currentPost.imageFile) {
           const imageUrl = await uploadImage(currentPost.imageFile);
           currentPost.image_url = imageUrl;
         }
         
-        // Remove imageFile before saving to database
         const { imageFile, ...postToSave } = currentPost;
         
-        // Set created_at for new posts
         if (!postToSave.id) {
           postToSave.created_at = new Date().toISOString();
         }
         
         if (postToSave.id) {
-          // Update existing post
           const { error } = await supabase
             .from('blog_posts')
             .update(postToSave)
@@ -225,7 +218,6 @@ const AdminBlog = () => {
             
           if (error) throw error;
         } else {
-          // Create new post
           const { error } = await supabase
             .from('blog_posts')
             .insert([postToSave]);
@@ -295,7 +287,6 @@ const AdminBlog = () => {
         
       if (error) throw error;
       
-      // Refresh categories
       await fetchCategories();
       
       setCurrentCategory("");
@@ -331,7 +322,6 @@ const AdminBlog = () => {
     }
 
     try {
-      // Find the category ID
       const { data, error: findError } = await supabase
         .from('blog_categories')
         .select('id')
@@ -340,7 +330,6 @@ const AdminBlog = () => {
         
       if (findError) throw findError;
       
-      // Update the category
       const { error } = await supabase
         .from('blog_categories')
         .update({ name: currentCategory })
@@ -348,7 +337,6 @@ const AdminBlog = () => {
         
       if (error) throw error;
       
-      // Also update all blog posts with this category
       const { error: postsError } = await supabase
         .from('blog_posts')
         .update({ category: currentCategory })
@@ -356,7 +344,6 @@ const AdminBlog = () => {
         
       if (postsError) throw postsError;
       
-      // Refresh categories
       await fetchCategories();
       
       setCurrentCategory("");
@@ -380,7 +367,6 @@ const AdminBlog = () => {
   const handleDeleteCategory = async (category: string) => {
     if (window.confirm("هل أنت متأكد من حذف هذه الفئة؟ سيتم إزالة الفئة من جميع المقالات المرتبطة بها.")) {
       try {
-        // Find the category ID
         const { data, error: findError } = await supabase
           .from('blog_categories')
           .select('id')
@@ -389,7 +375,6 @@ const AdminBlog = () => {
           
         if (findError) throw findError;
         
-        // Update all blog posts with this category to empty string
         const { error: postsError } = await supabase
           .from('blog_posts')
           .update({ category: "" })
@@ -397,7 +382,6 @@ const AdminBlog = () => {
           
         if (postsError) throw postsError;
         
-        // Delete the category
         const { error } = await supabase
           .from('blog_categories')
           .delete()
@@ -405,7 +389,6 @@ const AdminBlog = () => {
           
         if (error) throw error;
         
-        // Refresh categories
         await fetchCategories();
         
         toast({
@@ -497,7 +480,7 @@ const AdminBlog = () => {
                       className="w-full text-red-500 hover:text-red-700"
                     >
                       <Trash className="h-4 w-4 mr-2" />
-                      حذف الصورة
+                      ��ذف الصورة
                     </Button>
                   </div>
                 ) : (
