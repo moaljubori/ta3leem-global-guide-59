@@ -1,11 +1,11 @@
 
 import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { AdminHeader } from "./AdminHeader";
 
-export const AdminLayout = () => {
+export const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   // Check if user is authenticated
@@ -22,7 +22,7 @@ export const AdminLayout = () => {
       <div className="flex flex-col flex-1">
         <AdminHeader />
         <main className="flex-1 p-6">
-          <Outlet />
+          {children}
         </main>
       </div>
       <Toaster />

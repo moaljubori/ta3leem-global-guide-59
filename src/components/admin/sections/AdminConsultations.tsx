@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -19,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
+import {
   Dialog, DialogContent, DialogDescription, DialogFooter, 
   DialogHeader, DialogTitle 
 } from "@/components/ui/dialog";
@@ -95,13 +94,11 @@ export const AdminConsultations = () => {
   const { toast } = useToast();
 
   const filteredConsultations = consultations.filter(consultation => {
-    // Filter by search term
     const matchesSearch = 
       consultation.name.includes(searchTerm) || 
       consultation.email.includes(searchTerm) || 
       consultation.subject.includes(searchTerm);
     
-    // Filter by status
     const matchesStatus = statusFilter === "all" || consultation.status === statusFilter;
     
     return matchesSearch && matchesStatus;
@@ -117,7 +114,6 @@ export const AdminConsultations = () => {
       return;
     }
     
-    // Update consultation status
     setConsultations(prev => 
       prev.map(item => 
         item.id === selectedConsultation.id 
@@ -306,7 +302,6 @@ export const AdminConsultations = () => {
         </Table>
       </div>
       
-      {/* View Consultation Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -395,7 +390,6 @@ export const AdminConsultations = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Reply Dialog */}
       <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -445,7 +439,6 @@ export const AdminConsultations = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
