@@ -1,47 +1,34 @@
-
-import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 
 const BlogPreviewSection = () => {
-  const [blogPosts, setBlogPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchBlogPreviews() {
-      try {
-        const { data, error } = await supabase
-          .from('blog_posts')
-          .select('id, title, excerpt, category, created_at, image_url')
-          .order('created_at', { ascending: false })
-          .limit(3);
-          
-        if (error) throw error;
-        
-        setBlogPosts(data || []);
-      } catch (error) {
-        console.error("Error fetching blog previews:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchBlogPreviews();
-  }, []);
-
-  if (loading) {
-    return (
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <p>جاري تحميل المقالات...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const blogPosts = [
+    {
+      id: 1,
+      title: "أفضل 10 جامعات في كندا للطلاب الدوليين",
+      excerpt: "تعرف على أفضل الجامعات الكندية التي توفر برامج متميزة وبيئة داعمة للطلاب الدوليين...",
+      category: "كندا",
+      date: "21 مارس 2025",
+      image: "https://images.unsplash.com/photo-1612011213372-89a31f00a0e2?ixlib=rb-4.0.3",
+    },
+    {
+      id: 2,
+      title: "كيف تحصل على منحة دراسية في الولايات المتحدة",
+      excerpt: "نصائح عملية وخطوات مفصلة للتقدم بنجاح للمنح الدراسية في الجامعات الأمريكية...",
+      category: "المنح الدراسية",
+      date: "15 مارس 2025",
+      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3",
+    },
+    {
+      id: 3,
+      title: "دليل شامل للتأشيرة الدراسية البريطانية",
+      excerpt: "كل ما تحتاج معرفته عن متطلبات وإجراءات الحصول على تأشيرة الدراسة في المملكة المتحدة...",
+      category: "التأشيرات",
+      date: "8 مارس 2025",
+      image: "https://images.unsplash.com/photo-1526656892012-7b336603ed46?ixlib=rb-4.0.3",
+    },
+  ];
 
   return (
     <section className="py-20 bg-white">
@@ -64,7 +51,7 @@ const BlogPreviewSection = () => {
             >
               <div className="h-48 overflow-hidden">
                 <img
-                  src={post.image_url}
+                  src={post.image}
                   alt={post.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
@@ -74,19 +61,13 @@ const BlogPreviewSection = () => {
                   <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
                     {post.category}
                   </span>
-                  <span className="text-sm text-gray-500">
-                    {new Date(post.created_at).toLocaleDateString('ar-EG', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
+                  <span className="text-sm text-gray-500">{post.date}</span>
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
                   {post.title}
                 </h3>
                 <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                <div className="text-blue-600 font-medium flex items-center">
+                <div className="flex items-center text-blue-600 font-medium">
                   <span>اقرأ المزيد</span>
                   <ArrowLeft className="w-4 h-4 mr-2 group-hover:mr-1 transition-all" />
                 </div>

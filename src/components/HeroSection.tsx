@@ -3,13 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const HeroSection = () => {
-  const scrollToConsultation = () => {
-    const consultationSection = document.getElementById('consultation-form');
-    if (consultationSection) {
-      consultationSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <section className="relative bg-gradient-to-br from-blue-700 to-blue-900 text-white py-32 mt-16">
       {/* Decorative Elements */}
@@ -27,18 +20,12 @@ const HeroSection = () => {
             نرافقك في كل خطوة من خطوات دراستك في الخارج، من الاستشارة الأولى حتى التخرج
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button 
-              size="lg" 
-              className="bg-yellow-400 hover:bg-yellow-500 text-blue-900 font-bold text-lg py-6 px-8"
-              onClick={scrollToConsultation}
-            >
+            <Button size="lg" className="bg-gold-500 hover:bg-gold-600 text-blue-900 font-bold text-lg py-6 px-8">
               طلب استشارة مجانية
             </Button>
-            <Link to="/services">
-              <Button variant="outline" size="lg" className="bg-transparent border-white hover:bg-white/10 text-white font-bold text-lg py-6 px-8">
-                تعرف على خدماتنا
-              </Button>
-            </Link>
+            <Button variant="outline" size="lg" className="bg-transparent border-white hover:bg-white/10 text-white font-bold text-lg py-6 px-8">
+              تعرف على خدماتنا
+            </Button>
           </div>
           
           <div className="mt-12 flex flex-wrap justify-center gap-8">

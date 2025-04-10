@@ -10,18 +10,17 @@ import Contact from "./pages/Contact";
 import Countries from "./pages/Countries";
 import CountryDetail from "./pages/CountryDetail";
 import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
-import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <Toaster />
+      <Sonner />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -30,18 +29,10 @@ const App = () => (
           <Route path="/countries" element={<Countries />} />
           <Route path="/countries/:id" element={<CountryDetail />} />
           <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
-          <Route path="/services" element={<Services />} />
-          
-          {/* Admin routes */}
-          <Route path="/admin/*" element={<Admin />} />
-          
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <Toaster />
-        <Sonner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
