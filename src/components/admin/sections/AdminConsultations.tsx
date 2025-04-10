@@ -317,38 +317,38 @@ export const AdminConsultations = () => {
               <div className="flex justify-between flex-wrap gap-2">
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <Badge variant="outline" className="ml-2">الاسم</Badge>
+                    <Badge className="ml-2">الاسم</Badge>
                     <span>{selectedConsultation.name}</span>
                   </div>
                   <div className="flex items-center">
-                    <Badge variant="outline" className="ml-2">البريد الإلكتروني</Badge>
+                    <Badge className="ml-2">البريد الإلكتروني</Badge>
                     <span>{selectedConsultation.email}</span>
                   </div>
                   <div className="flex items-center">
-                    <Badge variant="outline" className="ml-2">رقم الهاتف</Badge>
+                    <Badge className="ml-2">رقم الهاتف</Badge>
                     <span>{selectedConsultation.phone}</span>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex items-center">
-                    <Badge variant="outline" className="ml-2">التاريخ</Badge>
+                    <Badge className="ml-2">التاريخ</Badge>
                     <span>{formatDate(selectedConsultation.created_at)}</span>
                   </div>
                   <div className="flex items-center">
-                    <Badge variant="outline" className="ml-2">الحالة</Badge>
+                    <Badge className="ml-2">الحالة</Badge>
                     {getStatusBadge(selectedConsultation.status)}
                   </div>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Badge variant="outline">الموضوع</Badge>
+                <Badge>الموضوع</Badge>
                 <p className="p-3 bg-gray-50 rounded-md">{selectedConsultation.subject}</p>
               </div>
               
               <div className="space-y-2">
-                <Badge variant="outline">الرسالة</Badge>
+                <Badge>الرسالة</Badge>
                 <div className="p-3 bg-gray-50 rounded-md whitespace-pre-wrap">
                   {selectedConsultation.message}
                 </div>
