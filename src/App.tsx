@@ -23,6 +23,18 @@ import AdminBlog from "./pages/AdminBlog";
 import AdminConsultations from "./pages/AdminConsultations";
 import AdminSEO from "./pages/AdminSEO";
 
+// Create placeholder components for missing admin pages
+import { AdminLayout } from "./components/admin/AdminLayout";
+import AdminContent from "./pages/AdminContent";
+import AdminMedia from "./pages/AdminMedia";
+import AdminStatistics from "./pages/AdminStatistics";
+import AdminUsers from "./pages/AdminUsers";
+import AdminNotifications from "./pages/AdminNotifications";
+import AdminEmail from "./pages/AdminEmail";
+import AdminCustomCode from "./pages/AdminCustomCode";
+import AdminSettings from "./pages/AdminSettings";
+import AdminProfile from "./pages/AdminProfile";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -50,6 +62,17 @@ const App = () => (
           <Route path="/admin/blog" element={<AdminBlog />} />
           <Route path="/admin/consultations" element={<AdminConsultations />} />
           <Route path="/admin/seo" element={<AdminSEO />} />
+          
+          {/* New Admin Routes */}
+          <Route path="/admin/content/*" element={<AdminContent />} />
+          <Route path="/admin/media" element={<AdminMedia />} />
+          <Route path="/admin/statistics" element={<AdminStatistics />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/notifications" element={<AdminNotifications />} />
+          <Route path="/admin/email" element={<AdminEmail />} />
+          <Route path="/admin/custom-code" element={<AdminCustomCode />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/profile" element={<AdminProfile />} />
           
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
