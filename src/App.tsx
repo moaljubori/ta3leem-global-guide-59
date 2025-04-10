@@ -15,6 +15,14 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
+// Admin Routes
+import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminPages from "./pages/AdminPages";
+import AdminBlog from "./pages/AdminBlog";
+import AdminConsultations from "./pages/AdminConsultations";
+import AdminSEO from "./pages/AdminSEO";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -24,6 +32,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
@@ -33,6 +42,16 @@ const App = () => (
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/pages" element={<AdminPages />} />
+          <Route path="/admin/blog" element={<AdminBlog />} />
+          <Route path="/admin/consultations" element={<AdminConsultations />} />
+          <Route path="/admin/seo" element={<AdminSEO />} />
+          
+          {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
