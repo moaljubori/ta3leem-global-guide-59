@@ -34,6 +34,7 @@ import AdminEmail from "./pages/AdminEmail";
 import AdminCustomCode from "./pages/AdminCustomCode";
 import AdminSettings from "./pages/AdminSettings";
 import AdminProfile from "./pages/AdminProfile";
+import PageEditor from "./pages/PageEditor";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,10 @@ const App = () => (
           <Route path="/admin/custom-code" element={<AdminCustomCode />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/profile" element={<AdminProfile />} />
+          
+          {/* Page Editor Routes */}
+          <Route path="/admin/pages/:pageId" element={<PageEditor />} />
+          <Route path="/admin/pages/:pageId/:sectionId" element={<PageEditor />} />
           
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
