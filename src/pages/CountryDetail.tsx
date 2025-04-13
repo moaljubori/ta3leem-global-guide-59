@@ -1,20 +1,25 @@
 
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import ContactOptions from "@/components/ContactOptions";
 import { 
   BookOpen, 
-  Calendar, 
-  Phone, 
-  Mail, 
-  Globe, 
+  Calendar,
   Check, 
   ChevronLeft 
 } from "lucide-react";
 
 const CountryDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  // Scroll to top when component mounts or id changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   // This would typically come from a database or API
   const countriesData = {
@@ -230,6 +235,43 @@ const CountryDetail = () => {
   const countryKey = (id && id in countriesData) ? id as CountryKey : "canada";
   const country = countriesData[countryKey];
 
+  // Country specific contact information
+  const contactInfo = {
+    canada: {
+      whatsapp: "16479876543",
+      phone: "+1 647 987 6543",
+      email: "canada@ta3leem-global.com"
+    },
+    usa: {
+      whatsapp: "12125556789",
+      phone: "+1 212 555 6789",
+      email: "usa@ta3leem-global.com"
+    },
+    uk: {
+      whatsapp: "447712345678",
+      phone: "+44 771 234 5678",
+      email: "uk@ta3leem-global.com"
+    },
+    australia: {
+      whatsapp: "61456789012",
+      phone: "+61 4 5678 9012",
+      email: "australia@ta3leem-global.com"
+    },
+    newzealand: {
+      whatsapp: "64211234567",
+      phone: "+64 21 123 4567",
+      email: "newzealand@ta3leem-global.com"
+    },
+    europe: {
+      whatsapp: "491721234567",
+      phone: "+49 172 123 4567",
+      email: "europe@ta3leem-global.com"
+    }
+  };
+
+  // Get contact info for current country
+  const contact = contactInfo[countryKey] || contactInfo.canada;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -349,61 +391,15 @@ const CountryDetail = () => {
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
-              {/* CTA Card */}
-              <div className="bg-blue-700 text-white rounded-lg p-6 shadow-lg mb-8">
-                <h3 className="font-bold text-xl mb-4">تحدث مع مستشار متخصص</h3>
-                <p className="mb-6 text-blue-100">
-                  احصل على استشارة مجانية من خبرائنا المتخصصين في الدراسة في {country.name}.
-                </p>
-                <form className="space-y-4">
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="الاسم الكامل"
-                      className="w-full p-3 rounded-md bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-gold-400"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="email"
-                      placeholder="البريد الإلكتروني"
-                      className="w-full p-3 rounded-md bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-gold-400"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="tel"
-                      placeholder="رقم الهاتف"
-                      className="w-full p-3 rounded-md bg-white/20 border border-white/30 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-gold-400"
-                    />
-                  </div>
-                  <Button className="w-full bg-gold-500 hover:bg-gold-600 text-blue-900 font-bold">
-                    طلب استشارة مجانية
-                  </Button>
-                </form>
-              </div>
-
-              {/* Contact Info */}
-              <div className="bg-gray-50 rounded-lg p-6 shadow-md mb-8">
-                <h3 className="font-bold text-xl mb-4 text-blue-800">تواصل مباشرة مع فريق {country.name}</h3>
-                <div className="space-y-4">
-                  <div className="flex">
-                    <Phone className="h-5 w-5 text-blue-600 ml-3" />
-                    <span className="text-gray-600">+123 456 7890</span>
-                  </div>
-                  <div className="flex">
-                    <Mail className="h-5 w-5 text-blue-600 ml-3" />
-                    <span className="text-gray-600">{id}@ta3leem-global.com</span>
-                  </div>
-                  <div className="flex">
-                    <Calendar className="h-5 w-5 text-blue-600 ml-3" />
-                    <span className="text-gray-600">حجز موعد</span>
-                  </div>
-                  <div className="flex">
-                    <Globe className="h-5 w-5 text-blue-600 ml-3" />
-                    <span className="text-gray-600">ويبينار تعريفي</span>
-                  </div>
-                </div>
+              {/* Contact Options */}
+              <div className="mb-8">
+                <ContactOptions 
+                  countryId={countryKey}
+                  countryName={country.name}
+                  whatsappNumber={contact.whatsapp}
+                  phoneNumber={contact.phone}
+                  emailAddress={contact.email}
+                />
               </div>
 
               {/* Quick Links */}
@@ -448,8 +444,15 @@ const CountryDetail = () => {
               <p className="text-xl text-gray-600 mb-8">
                 اتخذ الخطوة الأولى نحو مستقبلك الأكاديمي الآن
               </p>
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg">
-                احجز استشارة مجانية
+              <Button 
+                size="lg" 
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg"
+                onClick={() => {
+                  const contactSection = document.querySelector('.lg\\:col-span-1');
+                  contactSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                تواصل معنا الآن
               </Button>
             </div>
           </div>

@@ -64,6 +64,21 @@ const Footer = () => {
                   المملكة المتحدة
                 </Link>
               </li>
+              <li>
+                <Link to="/countries/australia" className="text-blue-100 hover:text-gold-300 transition-colors">
+                  أستراليا
+                </Link>
+              </li>
+              <li>
+                <Link to="/countries/newzealand" className="text-blue-100 hover:text-gold-300 transition-colors">
+                  نيوزيلندا
+                </Link>
+              </li>
+              <li>
+                <Link to="/countries/europe" className="text-blue-100 hover:text-gold-300 transition-colors">
+                  أوروبا
+                </Link>
+              </li>
             </ul>
           </div>
 
