@@ -17,7 +17,7 @@ import {
   MenuIcon,
   ChevronDown,
   ChevronRight,
-  AdCircle,
+  Circle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -101,7 +101,7 @@ export const AdminSidebar = () => {
     },
     {
       title: "الإعلانات",
-      icon: AdCircle,
+      icon: Circle,
       href: "/admin/advertisements",
     },
     {

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Search, UserPlus, UserCog, UserX, Check, X, MoreHorizontal, Lock, Mail, Shield
+  Search, UserPlus, UserCog, UserX, Check, X, MoreHorizontal, Lock, Mail, Shield, Pencil, Eye
 } from "lucide-react";
 import { 
   DropdownMenu, 

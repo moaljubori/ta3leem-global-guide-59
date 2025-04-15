@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { AdCircle, Code, Eye, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import { Circle, Code, Eye, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 type Advertisement = {
   id: string;
@@ -103,7 +102,7 @@ const AdminAdvertisements = () => {
     if (currentAd) {
       setAds(ads.filter(ad => ad.id !== currentAd.id));
       toast({
-        title: "تم الحذف بنجاح",
+        title: "تم الحذف ��نجاح",
         description: `تم حذف الإعلان "${currentAd.name}"`,
       });
       setIsDeleteDialogOpen(false);
@@ -290,7 +289,7 @@ const AdminAdvertisements = () => {
     if (adsList.length === 0) {
       return (
         <div className="text-center py-10">
-          <AdCircle className="mx-auto h-10 w-10 text-gray-400 mb-3" />
+          <Circle className="mx-auto h-10 w-10 text-gray-400 mb-3" />
           <p className="text-gray-500">لا توجد إعلانات</p>
         </div>
       );
