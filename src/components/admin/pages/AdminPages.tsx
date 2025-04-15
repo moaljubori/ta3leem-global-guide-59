@@ -1,50 +1,10 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { 
-  FileText, Home, Phone, Lock, FileQuestion, Briefcase, Plus,
-  Settings, ExternalLink, Eye, PenTool, Trash2 // Removed Toggle
-} from "lucide-react";
-import { Link } from "react-router-dom";
-
-type PageSection = {
-  id: string;
-  name: string;
-  description: string;
-  contactInfo?: {
-    whatsapp: string;
-    email: string;
-    phone: string;
-  };
-};
-
-type PageInfo = {
-  id: string;
-  name: string;
-  path: string;
-  icon: any;
-  description: string;
-  isActive: boolean;
-  sections: PageSection[];
-};
+import { FileText, Home, Lock, FileQuestion, Briefcase, Plus } from "lucide-react";
+import { PageCard } from "./components/PageCard";
+import { PageCreationDialog } from "./components/PageCreationDialog";
+import { PageInfo } from "./types";
 
 export const AdminPages = () => {
   const [pages, setPages] = useState<PageInfo[]>([
@@ -183,108 +143,21 @@ export const AdminPages = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {pages.map((page) => (
-          <Card key={page.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <page.icon className="h-5 w-5 text-gray-500 ml-2" />
-                  <CardTitle>{page.name}</CardTitle>
-                </div>
-                <Button
-                  variant={page.isActive ? "default" : "secondary"}
-                  size="sm"
-                  onClick={() => togglePageStatus(page.id)}
-                >
-                  {page.isActive ? "نشط" : "معطل"}
-                </Button>
-              </div>
-              <CardDescription>{page.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Link to={`/admin/pages/${page.id}`}>
-                    <Button variant="outline" size="sm">
-                      <PenTool className="ml-2 h-4 w-4" />
-                      تحرير الصفحة
-                    </Button>
-                  </Link>
-                  <Link to={page.path} target="_blank">
-                    <Button variant="ghost" size="sm">
-                      <ExternalLink className="ml-2 h-4 w-4" />
-                      معاينة
-                    </Button>
-                  </Link>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-medium mb-2">أقسام الصفحة:</h4>
-                  <ul className="space-y-2">
-                    {page.sections.map((section) => (
-                      <li key={section.id} className="text-sm">
-                        <Link
-                          to={`/admin/pages/${page.id}/${section.id}`}
-                          className="block p-2 rounded hover:bg-gray-100"
-                        >
-                          {section.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PageCard
+            key={page.id}
+            page={page}
+            onToggleStatus={togglePageStatus}
+          />
         ))}
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>إنشاء صفحة جديدة</DialogTitle>
-            <DialogDescription>
-              قم بإدخال معلومات الصفحة الجديدة
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="page-name">اسم الصفحة</Label>
-              <Input
-                id="page-name"
-                value={newPageData.name}
-                onChange={(e) => setNewPageData({ ...newPageData, name: e.target.value })}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="page-path">مسار الصفحة (URL)</Label>
-              <Input
-                id="page-path"
-                value={newPageData.path}
-                onChange={(e) => setNewPageData({ ...newPageData, path: e.target.value })}
-                placeholder="/example-page"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="page-description">وصف الصفحة</Label>
-              <Input
-                id="page-description"
-                value={newPageData.description}
-                onChange={(e) => setNewPageData({ ...newPageData, description: e.target.value })}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button onClick={handleCreatePage}>إنشاء الصفحة</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PageCreationDialog
+        isOpen={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        pageData={newPageData}
+        onPageDataChange={setNewPageData}
+        onCreatePage={handleCreatePage}
+      />
     </div>
   );
 };
