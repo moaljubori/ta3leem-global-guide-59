@@ -1,3 +1,4 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -26,8 +27,6 @@ import AdminSEO from "./pages/AdminSEO";
 
 // Create placeholder components for missing admin pages
 import { AdminLayout } from "./components/admin/AdminLayout";
-import AdminContent from "./pages/AdminContent";
-import AdminMedia from "./pages/AdminMedia";
 import AdminStatistics from "./pages/AdminStatistics";
 import AdminUsers from "./pages/AdminUsers";
 import AdminNotifications from "./pages/AdminNotifications";
@@ -36,6 +35,7 @@ import AdminCustomCode from "./pages/AdminCustomCode";
 import AdminSettings from "./pages/AdminSettings";
 import AdminProfile from "./pages/AdminProfile";
 import PageEditor from "./pages/PageEditor";
+import AdminAdvertisements from "./pages/AdminAdvertisements";
 
 const queryClient = new QueryClient();
 
@@ -66,9 +66,7 @@ const App = () => (
           <Route path="/admin/consultations" element={<AdminConsultations />} />
           <Route path="/admin/seo" element={<AdminSEO />} />
           
-          {/* New Admin Routes */}
-          <Route path="/admin/content/*" element={<AdminContent />} />
-          <Route path="/admin/media" element={<AdminMedia />} />
+          {/* Admin Routes */}
           <Route path="/admin/statistics" element={<AdminStatistics />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/notifications" element={<AdminNotifications />} />
@@ -76,6 +74,7 @@ const App = () => (
           <Route path="/admin/custom-code" element={<AdminCustomCode />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route path="/admin/advertisements" element={<AdminAdvertisements />} />
           
           {/* Page Editor Routes */}
           <Route path="/admin/pages/:pageId" element={<PageEditor />} />

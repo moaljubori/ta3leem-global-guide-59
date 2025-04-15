@@ -190,6 +190,22 @@ export const AdminBlog = () => {
     });
   };
 
+  // Fix the freezing issue by properly cleaning up state when closing dialogs
+  const handleCloseEditDialog = () => {
+    setEditPost(null);
+    setIsEditDialogOpen(false);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setPostToDelete(null);
+    setIsDeleteDialogOpen(false);
+  };
+
+  const handleCloseCategoryDialog = () => {
+    setCategoryToDelete(null);
+    setIsDeleteCategoryDialogOpen(false);
+  };
+
   const handleSavePost = () => {
     if (!editPost.title || !editPost.excerpt || !editPost.content || !editPost.category || !editPost.author) {
       toast({
@@ -218,7 +234,7 @@ export const AdminBlog = () => {
         description: `تمت إضافة مقال "${editPost.title}"`,
       });
     }
-    setIsEditDialogOpen(false);
+    handleCloseEditDialog();
   };
 
   const handleAddCategory = () => {
@@ -266,7 +282,7 @@ export const AdminBlog = () => {
         description: `تم حذف تصنيف "${categoryToDelete.name}"`,
       });
     }
-    setIsDeleteCategoryDialogOpen(false);
+    handleCloseCategoryDialog();
   };
 
   return (
@@ -471,231 +487,237 @@ export const AdminBlog = () => {
       </TabsContent>
 
       {/* Edit Post Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editPost?.id ? `تعديل مقال: ${editPost.title}` : 'إضافة مقال جديد'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {editPost && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="title" className="text-sm font-medium">
-                    عنوان المقال*
-                  </label>
-                  <Input
-                    id="title"
-                    value={editPost.title}
-                    onChange={(e) => setEditPost({ ...editPost, title: e.target.value })}
-                    placeholder="أدخل عنوان المقال"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="category" className="text-sm font-medium">
-                    التصنيف*
-                  </label>
-                  <Select
-                    value={editPost.category}
-                    onValueChange={(value) => setEditPost({ ...editPost, category: value })}
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="اختر التصنيف" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category.id} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="author" className="text-sm font-medium">
-                    اسم الكاتب*
-                  </label>
-                  <Input
-                    id="author"
-                    value={editPost.author}
-                    onChange={(e) => setEditPost({ ...editPost, author: e.target.value })}
-                    placeholder="أدخل اسم الكاتب"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="date" className="text-sm font-medium">
-                    تاريخ النشر*
-                  </label>
-                  <div className="flex items-center">
-                    <Calendar className="ml-2 h-4 w-4 text-gray-500" />
+      {isEditDialogOpen && (
+        <Dialog open={isEditDialogOpen} onOpenChange={handleCloseEditDialog}>
+          <DialogContent className="max-w-4xl h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editPost?.id ? `تعديل مقال: ${editPost.title}` : 'إضافة مقال جديد'}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {editPost && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-sm font-medium">
+                      عنوان المقال*
+                    </Label>
                     <Input
-                      id="date"
-                      type="date"
-                      value={editPost.date}
-                      onChange={(e) => setEditPost({ ...editPost, date: e.target.value })}
+                      id="title"
+                      value={editPost.title}
+                      onChange={(e) => setEditPost({ ...editPost, title: e.target.value })}
+                      placeholder="أدخل عنوان المقال"
                     />
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="text-sm font-medium">
+                      التصنيف*
+                    </Label>
+                    <Select
+                      value={editPost.category}
+                      onValueChange={(value) => setEditPost({ ...editPost, category: value })}
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="اختر التصنيف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(category => (
+                          <SelectItem key={category.id} value={category.name}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="image" className="text-sm font-medium">
-                  رابط الصورة*
-                </label>
-                <div className="flex items-center">
-                  <ImageIcon className="ml-2 h-4 w-4 text-gray-500" />
-                  <Input
-                    id="image"
-                    value={editPost.image}
-                    onChange={(e) => setEditPost({ ...editPost, image: e.target.value })}
-                    placeholder="أدخل رابط صورة المقال"
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="author" className="text-sm font-medium">
+                      اسم الكاتب*
+                    </Label>
+                    <Input
+                      id="author"
+                      value={editPost.author}
+                      onChange={(e) => setEditPost({ ...editPost, author: e.target.value })}
+                      placeholder="أدخل اسم الكاتب"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="date" className="text-sm font-medium">
+                      تاريخ النشر*
+                    </Label>
+                    <div className="flex items-center">
+                      <Calendar className="ml-2 h-4 w-4 text-gray-500" />
+                      <Input
+                        id="date"
+                        type="date"
+                        value={editPost.date}
+                        onChange={(e) => setEditPost({ ...editPost, date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="image" className="text-sm font-medium">
+                    رابط الصورة*
+                  </Label>
+                  <div className="flex items-center">
+                    <ImageIcon className="ml-2 h-4 w-4 text-gray-500" />
+                    <Input
+                      id="image"
+                      value={editPost.image}
+                      onChange={(e) => setEditPost({ ...editPost, image: e.target.value })}
+                      placeholder="أدخل رابط صورة المقال"
+                    />
+                  </div>
+                  {editPost.image && (
+                    <div className="mt-2">
+                      <img 
+                        src={editPost.image} 
+                        alt="معاينة الصورة" 
+                        className="h-28 w-auto object-cover rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="excerpt" className="text-sm font-medium">
+                    مقتطف المقال*
+                  </Label>
+                  <Textarea
+                    id="excerpt"
+                    value={editPost.excerpt}
+                    onChange={(e) => setEditPost({ ...editPost, excerpt: e.target.value })}
+                    placeholder="أدخل مقتطفًا مختصرًا للمقال"
+                    className="h-20"
                   />
                 </div>
-                {editPost.image && (
-                  <div className="mt-2">
-                    <img 
-                      src={editPost.image} 
-                      alt="معاينة الصورة" 
-                      className="h-28 w-auto object-cover rounded"
-                    />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="content" className="text-sm font-medium">
+                    محتوى المقال*
+                  </Label>
+                  <Textarea
+                    id="content"
+                    value={editPost.content}
+                    onChange={(e) => setEditPost({ ...editPost, content: e.target.value })}
+                    placeholder="أدخل محتوى المقال كاملاً"
+                    className="h-48"
+                  />
+                  <p className="text-xs text-gray-500">
+                    يدعم محتوى المقال وسوم HTML الأساسية مثل &lt;p&gt; و &lt;h2&gt; و &lt;ul&gt; و &lt;li&gt;
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-4 space-x-reverse">
+                  <input
+                    type="checkbox"
+                    id="published"
+                    checked={editPost.published}
+                    onChange={(e) => setEditPost({ ...editPost, published: e.target.checked })}
+                    className="ml-2"
+                  />
+                  <Label htmlFor="published" className="text-sm font-medium cursor-pointer">
+                    نشر المقال
+                  </Label>
+                  <div className="text-xs text-gray-500 flex items-center">
+                    <Clock className="ml-1 h-3 w-3" />
+                    {editPost.published ? 'سيظهر المقال للجميع' : 'سيتم حفظ المقال كمسودة'}
                   </div>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="excerpt" className="text-sm font-medium">
-                  مقتطف المقال*
-                </label>
-                <Textarea
-                  id="excerpt"
-                  value={editPost.excerpt}
-                  onChange={(e) => setEditPost({ ...editPost, excerpt: e.target.value })}
-                  placeholder="أدخل مقتطفًا مختصرًا للمقال"
-                  className="h-20"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="content" className="text-sm font-medium">
-                  محتوى المقال*
-                </label>
-                <Textarea
-                  id="content"
-                  value={editPost.content}
-                  onChange={(e) => setEditPost({ ...editPost, content: e.target.value })}
-                  placeholder="أدخل محتوى المقال كاملاً"
-                  className="h-48"
-                />
-                <p className="text-xs text-gray-500">
-                  يدعم محتوى المقال وسوم HTML الأساسية مثل &lt;p&gt; و &lt;h2&gt; و &lt;ul&gt; و &lt;li&gt;
-                </p>
-              </div>
-              
-              <div className="flex items-center space-x-4 space-x-reverse">
-                <input
-                  type="checkbox"
-                  id="published"
-                  checked={editPost.published}
-                  onChange={(e) => setEditPost({ ...editPost, published: e.target.checked })}
-                  className="ml-2"
-                />
-                <label htmlFor="published" className="text-sm font-medium cursor-pointer">
-                  نشر المقال
-                </label>
-                <div className="text-xs text-gray-500 flex items-center">
-                  <Clock className="ml-1 h-3 w-3" />
-                  {editPost.published ? 'سيظهر المقال للجميع' : 'سيتم حفظ المقال كمسودة'}
                 </div>
               </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button onClick={handleSavePost}>
-              <Save className="ml-2 h-4 w-4" />
-              حفظ المقال
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseEditDialog}>
+                إلغاء
+              </Button>
+              <Button onClick={handleSavePost}>
+                <Save className="ml-2 h-4 w-4" />
+                حفظ المقال
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       
       {/* Delete Post Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">تأكيد حذف المقال</DialogTitle>
-            <DialogDescription>
-              هل أنت متأكد من رغبتك في حذف هذا المقال؟ لا يمكن التراجع عن هذا الإجراء.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {postToDelete && (
-            <div className="py-4">
-              <p className="font-bold">{postToDelete.title}</p>
-              <p className="text-sm text-gray-500 mt-1">{postToDelete.excerpt}</p>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button variant="destructive" onClick={handleDeletePost}>
-              <Trash2 className="ml-2 h-4 w-4" />
-              تأكيد الحذف
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isDeleteDialogOpen && (
+        <Dialog open={isDeleteDialogOpen} onOpenChange={handleCloseDeleteDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-red-600">تأكيد حذف المقال</DialogTitle>
+              <DialogDescription>
+                هل أنت متأكد من رغبتك في حذف هذا المقال؟ لا يمكن التراجع عن هذا الإجراء.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {postToDelete && (
+              <div className="py-4">
+                <p className="font-bold">{postToDelete.title}</p>
+                <p className="text-sm text-gray-500 mt-1">{postToDelete.excerpt}</p>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseDeleteDialog}>
+                إلغاء
+              </Button>
+              <Button variant="destructive" onClick={handleDeletePost}>
+                <Trash2 className="ml-2 h-4 w-4" />
+                تأكيد الحذف
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
       
       {/* Delete Category Dialog */}
-      <Dialog open={isDeleteCategoryDialogOpen} onOpenChange={setIsDeleteCategoryDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">تأكيد حذف التصنيف</DialogTitle>
-            <DialogDescription>
-              هل أنت متأكد من رغبتك في حذف هذا التصنيف؟
-              {categoryToDelete && posts.some(p => p.category === categoryToDelete.name) ? (
-                <p className="text-red-500 mt-2">
-                  لا يمكن حذف هذا التصنيف لأنه يحتوي على مقالات. يجب تغيير تصنيف المقالات أولاً.
-                </p>
-              ) : (
-                <p>لا يمكن التراجع عن هذا الإجراء.</p>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {categoryToDelete && (
-            <div className="py-4">
-              <p className="font-bold">{categoryToDelete.name}</p>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteCategoryDialogOpen(false)}>
-              إلغاء
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteCategory}
-              disabled={categoryToDelete && posts.some(p => p.category === categoryToDelete.name)}
-            >
-              <Trash2 className="ml-2 h-4 w-4" />
-              تأكيد الحذف
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {isDeleteCategoryDialogOpen && (
+        <Dialog open={isDeleteCategoryDialogOpen} onOpenChange={handleCloseCategoryDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-red-600">تأكيد حذف التصنيف</DialogTitle>
+              <DialogDescription>
+                هل أنت متأكد من رغبتك في حذف هذا التصنيف؟
+                {categoryToDelete && posts.some(p => p.category === categoryToDelete.name) ? (
+                  <p className="text-red-500 mt-2">
+                    لا يمكن حذف هذا التصنيف لأنه يحتوي على مقالات. يجب تغيير تصنيف المقالات أولاً.
+                  </p>
+                ) : (
+                  <p>لا يمكن التراجع عن هذا الإجراء.</p>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {categoryToDelete && (
+              <div className="py-4">
+                <p className="font-bold">{categoryToDelete.name}</p>
+              </div>
+            )}
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseCategoryDialog}>
+                إلغاء
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteCategory}
+                disabled={categoryToDelete && posts.some(p => p.category === categoryToDelete.name)}
+              >
+                <Trash2 className="ml-2 h-4 w-4" />
+                تأكيد الحذف
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Tabs>
   );
 };

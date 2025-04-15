@@ -8,7 +8,6 @@ import {
   Settings,
   FileText,
   PenTool,
-  Image,
   BarChart2,
   Bell,
   Code,
@@ -18,6 +17,7 @@ import {
   MenuIcon,
   ChevronDown,
   ChevronRight,
+  AdCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -58,26 +58,11 @@ export const AdminSidebar = () => {
       children: [
         { title: "الرئيسية", href: "/admin/pages/home" },
         { title: "من نحن", href: "/admin/pages/about" },
+        { title: "الخدمات", href: "/admin/pages/services" },
         { title: "تواصل معنا", href: "/admin/pages/contact" },
         { title: "الدول", href: "/admin/pages/countries" },
         { title: "المدونة", href: "/admin/pages/blog" },
       ],
-    },
-    {
-      title: "المحتوى",
-      icon: PenTool,
-      href: "/admin/content",
-      children: [
-        { title: "النصوص", href: "/admin/content/text" },
-        { title: "الأزرار والروابط", href: "/admin/content/buttons" },
-        { title: "الأيقونات", href: "/admin/content/icons" },
-        { title: "ألوان الموقع", href: "/admin/content/colors" },
-      ],
-    },
-    {
-      title: "الوسائط",
-      icon: Image,
-      href: "/admin/media",
     },
     {
       title: "المدونة",
@@ -113,6 +98,11 @@ export const AdminSidebar = () => {
       title: "تحسين البريد الإلكتروني",
       icon: Mail,
       href: "/admin/email",
+    },
+    {
+      title: "الإعلانات",
+      icon: AdCircle,
+      href: "/admin/advertisements",
     },
     {
       title: "أكواد إضافية",
