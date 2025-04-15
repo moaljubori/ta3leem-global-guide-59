@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { GlobeIcon, Mail, Phone } from "lucide-react";
 
@@ -30,6 +29,11 @@ const Footer = () => {
               <li>
                 <Link to="/about" className="text-blue-100 hover:text-gold-300 transition-colors">
                   من نحن
+                </Link>
+              </li>
+              <li>
+                <Link to="/services" className="text-blue-100 hover:text-gold-300 transition-colors">
+                  خدماتنا
                 </Link>
               </li>
               <li>
