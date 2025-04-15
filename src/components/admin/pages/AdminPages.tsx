@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
   FileText, Home, Phone, Lock, FileQuestion, Briefcase, Plus,
-  Settings, ExternalLink, Eye, PenTool, Trash2, Toggle
+  Settings, ExternalLink, Eye, PenTool, Trash2 // Removed Toggle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
