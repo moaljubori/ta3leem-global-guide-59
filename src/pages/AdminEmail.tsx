@@ -29,6 +29,7 @@ import {
   User,
   UserCheck,
   UserPlus,
+  Bell
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -410,7 +411,7 @@ const AdminEmail = () => {
                   className="min-h-[200px] font-mono text-sm"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  يمكنك استخدام وسوم HTML مثل &lt;p&gt;, &lt;a&gt;, &lt;b&gt; وكذلك المتغيرات مثل {{"{{"}}name{{"}}"}}
+                  يمكنك استخدام وسوم HTML مثل &lt;p&gt;, &lt;a&gt;, &lt;b&gt; وكذلك المتغيرات مثل {"{{"} name {"}}"}
                 </p>
               </div>
               
