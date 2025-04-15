@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -28,7 +27,6 @@ import {
   CheckCircle, Clock, AlertCircle, Ban, Mail
 } from "lucide-react";
 
-// Mock consultations data
 const mockConsultations = [
   {
     id: "1",
@@ -183,7 +181,19 @@ export const AdminConsultations = () => {
       minute: '2-digit'
     }).format(date);
   };
-  
+
+  const handleViewConsultation = (consultation: any) => {
+    setSelectedConsultation(consultation);
+    setViewDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setViewDialogOpen(false);
+    setReplyDialogOpen(false);
+    setDeleteDialogOpen(false);
+    setTimeout(() => setSelectedConsultation(null), 300);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -257,8 +267,7 @@ export const AdminConsultations = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           onClick={() => {
-                            setSelectedConsultation(item);
-                            setViewDialogOpen(true);
+                            handleViewConsultation(item);
                           }}
                         >
                           <Eye className="ml-2 h-4 w-4" />
@@ -303,7 +312,7 @@ export const AdminConsultations = () => {
         </Table>
       </div>
       
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+      <Dialog open={viewDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>تفاصيل الاستشارة</DialogTitle>
@@ -391,7 +400,7 @@ export const AdminConsultations = () => {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+      <Dialog open={replyDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center">
@@ -440,7 +449,7 @@ export const AdminConsultations = () => {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={deleteDialogOpen} onOpenChange={closeDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-red-600">تأكيد الحذف</DialogTitle>
