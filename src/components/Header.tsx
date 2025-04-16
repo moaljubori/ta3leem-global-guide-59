@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { GlobeIcon, MenuIcon, X, Briefcase } from "lucide-react";
+import { GlobeIcon, MenuIcon, X, Briefcase, Home, Info, Newspaper, Mail } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,20 +17,28 @@ const Header = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-6 space-x-reverse">
-          <Link to="/" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
+          <Link to="/" className="text-gray-800 font-medium hover:text-blue-500 transition-colors flex items-center gap-2">
+            <Home className="h-4 w-4" />
             الرئيسية
           </Link>
-          <Link to="/about" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
+          <Link to="/about" className="text-gray-800 font-medium hover:text-blue-500 transition-colors flex items-center gap-2">
+            <Info className="h-4 w-4" />
             من نحن
           </Link>
-          <Link to="/services" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
-            <Briefcase className="inline-block ml-1 h-4 w-4" />
+          <Link to="/services" className="text-gray-800 font-medium hover:text-blue-500 transition-colors flex items-center gap-2">
+            <Briefcase className="h-4 w-4" />
             خدماتنا
           </Link>
-          <Link to="/countries" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
+          <Link to="/countries" className="text-gray-800 font-medium hover:text-blue-500 transition-colors flex items-center gap-2">
+            <GlobeIcon className="h-4 w-4" />
             الدول
           </Link>
-          <Link to="/contact" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
+          <Link to="/blog" className="text-gray-800 font-medium hover:text-blue-500 transition-colors flex items-center gap-2">
+            <Newspaper className="h-4 w-4" />
+            المدونة
+          </Link>
+          <Link to="/contact" className="text-gray-800 font-medium hover:text-blue-500 transition-colors flex items-center gap-2">
+            <Mail className="h-4 w-4" />
             اتصل بنا
           </Link>
           <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
@@ -53,37 +62,50 @@ const Header = () => {
           <div className="flex flex-col px-4 py-2 space-y-3">
             <Link 
               to="/" 
-              className="text-gray-800 font-medium py-2 hover:text-blue-500"
+              className="text-gray-800 font-medium py-2 hover:text-blue-500 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
+              <Home className="h-4 w-4" />
               الرئيسية
             </Link>
             <Link 
               to="/about" 
-              className="text-gray-800 font-medium py-2 hover:text-blue-500"
+              className="text-gray-800 font-medium py-2 hover:text-blue-500 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
+              <Info className="h-4 w-4" />
               من نحن
             </Link>
             <Link 
               to="/services" 
-              className="text-gray-800 font-medium py-2 hover:text-blue-500"
+              className="text-gray-800 font-medium py-2 hover:text-blue-500 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
+              <Briefcase className="h-4 w-4" />
               خدماتنا
             </Link>
             <Link 
               to="/countries" 
-              className="text-gray-800 font-medium py-2 hover:text-blue-500"
+              className="text-gray-800 font-medium py-2 hover:text-blue-500 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
+              <GlobeIcon className="h-4 w-4" />
               الدول
             </Link>
             <Link 
-              to="/contact" 
-              className="text-gray-800 font-medium py-2 hover:text-blue-500"
+              to="/blog" 
+              className="text-gray-800 font-medium py-2 hover:text-blue-500 flex items-center gap-2"
               onClick={() => setIsMenuOpen(false)}
             >
+              <Newspaper className="h-4 w-4" />
+              المدونة
+            </Link>
+            <Link 
+              to="/contact" 
+              className="text-gray-800 font-medium py-2 hover:text-blue-500 flex items-center gap-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Mail className="h-4 w-4" />
               اتصل بنا
             </Link>
             <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full">

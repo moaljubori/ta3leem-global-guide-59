@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
@@ -6,17 +6,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, 
@@ -89,21 +82,23 @@ export const AdminConsultations = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
-  
+
   const { toast } = useToast();
 
-  const filteredConsultations = consultations.filter(consultation => {
-    const matchesSearch = 
-      consultation.name.includes(searchTerm) || 
-      consultation.email.includes(searchTerm) || 
-      consultation.subject.includes(searchTerm);
-    
-    const matchesStatus = statusFilter === "all" || consultation.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-  
-  const handleSendReply = () => {
+  const filteredConsultations = useMemo(() => {
+    return consultations.filter(consultation => {
+      const matchesSearch = 
+        consultation.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        consultation.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        consultation.subject.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || consultation.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [consultations, searchTerm, statusFilter]);
+
+  const handleSendReply = useCallback(() => {
     if (!replyMessage.trim()) {
       toast({
         title: "خطأ",
@@ -115,7 +110,7 @@ export const AdminConsultations = () => {
     
     setConsultations(prev => 
       prev.map(item => 
-        item.id === selectedConsultation.id 
+        item.id === selectedConsultation?.id 
           ? { ...item, status: "replied" } 
           : item
       )
@@ -123,16 +118,16 @@ export const AdminConsultations = () => {
     
     toast({
       title: "تم إرسال الرد بنجاح",
-      description: `تم الرد على استفسار ${selectedConsultation.name}`,
+      description: `تم الرد على استفسار ${selectedConsultation?.name}`,
     });
     
     setReplyMessage("");
     setReplyDialogOpen(false);
-  };
-  
-  const handleDeleteConsultation = () => {
+  }, [replyMessage, selectedConsultation, toast]);
+
+  const handleDeleteConsultation = useCallback(() => {
     setConsultations(prev => 
-      prev.filter(item => item.id !== selectedConsultation.id)
+      prev.filter(item => item.id !== selectedConsultation?.id)
     );
     
     toast({
@@ -141,7 +136,7 @@ export const AdminConsultations = () => {
     });
     
     setDeleteDialogOpen(false);
-  };
+  }, [selectedConsultation, toast]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -170,7 +165,7 @@ export const AdminConsultations = () => {
         return null;
     }
   };
-  
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('ar-SA', { 
@@ -187,12 +182,78 @@ export const AdminConsultations = () => {
     setViewDialogOpen(true);
   };
 
-  const closeDialog = () => {
+  const closeDialog = useCallback(() => {
     setViewDialogOpen(false);
     setReplyDialogOpen(false);
     setDeleteDialogOpen(false);
     setTimeout(() => setSelectedConsultation(null), 300);
-  };
+  }, []);
+
+  const tableContent = useMemo(() => {
+    if (filteredConsultations.length === 0) {
+      return (
+        <TableRow>
+          <TableCell colSpan={6} className="text-center py-10">
+            <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-500 mb-1">لا توجد استشارات تطابق معايير البحث</p>
+            <p className="text-sm text-gray-400">حاول تغيير معايير البحث أو الفلترة</p>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
+    return filteredConsultations.map((item) => (
+      <TableRow key={item.id}>
+        <TableCell className="font-medium">{item.name}</TableCell>
+        <TableCell className="hidden md:table-cell">{item.email}</TableCell>
+        <TableCell className="max-w-[200px] truncate">{item.subject}</TableCell>
+        <TableCell className="hidden lg:table-cell">
+          {formatDate(item.created_at)}
+        </TableCell>
+        <TableCell>{getStatusBadge(item.status)}</TableCell>
+        <TableCell>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  handleViewConsultation(item);
+                }}
+              >
+                <Eye className="ml-2 h-4 w-4" />
+                عرض التفاصيل
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem
+                onClick={() => {
+                  setSelectedConsultation(item);
+                  setReplyDialogOpen(true);
+                }}
+              >
+                <Send className="ml-2 h-4 w-4" />
+                إرسال رد
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem
+                onClick={() => {
+                  setSelectedConsultation(item);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-red-600 hover:text-red-700 focus:text-red-700"
+              >
+                <Trash2 className="ml-2 h-4 w-4" />
+                حذف
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+    ));
+  }, [filteredConsultations]);
 
   return (
     <div className="space-y-6">
@@ -247,67 +308,7 @@ export const AdminConsultations = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredConsultations.length > 0 ? (
-              filteredConsultations.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="hidden md:table-cell">{item.email}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{item.subject}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {formatDate(item.created_at)}
-                  </TableCell>
-                  <TableCell>{getStatusBadge(item.status)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            handleViewConsultation(item);
-                          }}
-                        >
-                          <Eye className="ml-2 h-4 w-4" />
-                          عرض التفاصيل
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedConsultation(item);
-                            setReplyDialogOpen(true);
-                          }}
-                        >
-                          <Send className="ml-2 h-4 w-4" />
-                          إرسال رد
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setSelectedConsultation(item);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-red-600 hover:text-red-700 focus:text-red-700"
-                        >
-                          <Trash2 className="ml-2 h-4 w-4" />
-                          حذف
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                  <p className="text-gray-500 mb-1">لا توجد استشارات تطابق معايير البحث</p>
-                  <p className="text-sm text-gray-400">حاول تغيير معايير البحث أو الفلترة</p>
-                </TableCell>
-              </TableRow>
-            )}
+            {tableContent}
           </TableBody>
         </Table>
       </div>
