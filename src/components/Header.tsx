@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { GlobeIcon, MenuIcon, X } from "lucide-react";
+import { GlobeIcon, MenuIcon, X, Briefcase } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,11 +22,12 @@ const Header = () => {
           <Link to="/about" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
             من نحن
           </Link>
+          <Link to="/services" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
+            <Briefcase className="inline-block ml-1 h-4 w-4" />
+            خدماتنا
+          </Link>
           <Link to="/countries" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
             الدول
-          </Link>
-          <Link to="/blog" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
-            المدونة
           </Link>
           <Link to="/contact" className="text-gray-800 font-medium hover:text-blue-500 transition-colors">
             اتصل بنا
@@ -66,18 +66,18 @@ const Header = () => {
               من نحن
             </Link>
             <Link 
+              to="/services" 
+              className="text-gray-800 font-medium py-2 hover:text-blue-500"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              خدماتنا
+            </Link>
+            <Link 
               to="/countries" 
               className="text-gray-800 font-medium py-2 hover:text-blue-500"
               onClick={() => setIsMenuOpen(false)}
             >
               الدول
-            </Link>
-            <Link 
-              to="/blog" 
-              className="text-gray-800 font-medium py-2 hover:text-blue-500"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              المدونة
             </Link>
             <Link 
               to="/contact" 

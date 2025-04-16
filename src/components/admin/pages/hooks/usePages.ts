@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Home, Lock, FileQuestion, Briefcase } from "lucide-react";
+import { FileText, Home, Lock, FileQuestion, Briefcase, Users, MessageSquare, Globe } from "lucide-react";
 import { PageInfo } from "../types";
 
 export const usePages = () => {
@@ -23,6 +24,46 @@ export const usePages = () => {
             phone: "+966500000000"
           }
         },
+        {
+          id: "processes",
+          name: "خطوات العمل",
+          description: "شرح خطوات التقديم للدراسة",
+        },
+        {
+          id: "countries",
+          name: "الدول المتاحة",
+          description: "عرض الدول المتاحة للدراسة",
+        },
+        {
+          id: "testimonials",
+          name: "آراء العملاء",
+          description: "تجارب وآراء الطلاب السابقين",
+        }
+      ]
+    },
+    {
+      id: "about",
+      name: "من نحن",
+      path: "/about",
+      icon: Users,
+      description: "صفحة التعريف بالشركة",
+      isActive: true,
+      sections: [
+        {
+          id: "about-hero",
+          name: "مقدمة من نحن",
+          description: "النص التعريفي الرئيسي"
+        },
+        {
+          id: "our-mission",
+          name: "رسالتنا ورؤيتنا",
+          description: "رسالة وأهداف الشركة"
+        },
+        {
+          id: "our-team",
+          name: "فريق العمل",
+          description: "عرض أعضاء فريق العمل"
+        }
       ]
     },
     {
@@ -37,11 +78,66 @@ export const usePages = () => {
           id: "services-intro",
           name: "مقدمة الخدمات",
           description: "نظرة عامة على خدماتنا",
+        },
+        {
+          id: "services-list",
+          name: "قائمة الخدمات",
+          description: "تفاصيل خدماتنا المقدمة"
+        },
+        {
+          id: "why-us",
+          name: "لماذا نحن",
+          description: "مميزات التعامل معنا"
+        }
+      ]
+    },
+    {
+      id: "contact",
+      name: "اتصل بنا",
+      path: "/contact",
+      icon: MessageSquare,
+      description: "صفحة التواصل",
+      isActive: true,
+      sections: [
+        {
+          id: "contact-info",
+          name: "معلومات التواصل",
+          description: "بيانات الاتصال الرئيسية",
           contactInfo: {
             whatsapp: "+966500000000",
-            email: "services@example.com",
+            email: "contact@example.com",
             phone: "+966500000000"
           }
+        },
+        {
+          id: "contact-form",
+          name: "نموذج التواصل",
+          description: "نموذج إرسال الرسائل"
+        },
+        {
+          id: "location",
+          name: "موقعنا",
+          description: "خريطة وعنوان المكتب"
+        }
+      ]
+    },
+    {
+      id: "countries",
+      name: "الدول",
+      path: "/countries",
+      icon: Globe,
+      description: "صفحة الدول المتاحة للدراسة",
+      isActive: true,
+      sections: [
+        {
+          id: "countries-intro",
+          name: "مقدمة الدول",
+          description: "نظرة عامة على الدول المتاحة"
+        },
+        {
+          id: "countries-list",
+          name: "قائمة الدول",
+          description: "تفاصيل الدول وفرص الدراسة"
         }
       ]
     },
@@ -116,6 +212,14 @@ export const usePages = () => {
         ? { ...page, isActive: !page.isActive }
         : page
     ));
+
+    const page = pages.find(p => p.id === pageId);
+    if (page) {
+      toast({
+        title: page.isActive ? "تم تعطيل الصفحة" : "تم تفعيل الصفحة",
+        description: `تم ${page.isActive ? "تعطيل" : "تفعيل"} صفحة ${page.name} بنجاح`
+      });
+    }
   };
 
   return {
