@@ -1,38 +1,12 @@
 
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard,
-  MessageSquare,
-  Users,
-  Settings,
-  FileText,
-  PenTool,
-  BarChart2,
-  Bell,
-  Code,
-  Newspaper,
-  Mail,
-  Globe,
-  MenuIcon,
-  ChevronDown,
-  ChevronRight,
-  Circle,
-} from "lucide-react";
+import { MenuIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-type SidebarItem = {
-  title: string;
-  icon: React.ElementType;
-  href: string;
-  children?: { title: string; href: string }[];
-};
+import { SidebarMenuItem } from "./sidebar/SidebarMenuItem";
+import { SidebarSubmenu } from "./sidebar/SidebarSubmenu";
+import { sidebarItems } from "./sidebar/sidebarItems";
+import { SidebarItem } from "./sidebar/types";
 
 export const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -44,77 +18,6 @@ export const AdminSidebar = () => {
       [title]: !prev[title]
     }));
   };
-
-  const sidebarItems: SidebarItem[] = [
-    {
-      title: "لوحة التحكم",
-      icon: LayoutDashboard,
-      href: "/admin/dashboard",
-    },
-    {
-      title: "صفحات الموقع",
-      icon: FileText,
-      href: "/admin/pages",
-      children: [
-        { title: "الرئيسية", href: "/admin/pages/home" },
-        { title: "من نحن", href: "/admin/pages/about" },
-        { title: "الخدمات", href: "/admin/pages/services" },
-        { title: "تواصل معنا", href: "/admin/pages/contact" },
-        { title: "الدول", href: "/admin/pages/countries" },
-        { title: "المدونة", href: "/admin/pages/blog" },
-      ],
-    },
-    {
-      title: "المدونة",
-      icon: Newspaper,
-      href: "/admin/blog",
-    },
-    {
-      title: "الاستشارات",
-      icon: MessageSquare,
-      href: "/admin/consultations",
-    },
-    {
-      title: "الإحصائيات",
-      icon: BarChart2,
-      href: "/admin/statistics",
-    },
-    {
-      title: "المستخدمين",
-      icon: Users,
-      href: "/admin/users",
-    },
-    {
-      title: "الإشعارات",
-      icon: Bell,
-      href: "/admin/notifications",
-    },
-    {
-      title: "تحسين محركات البحث",
-      icon: Globe,
-      href: "/admin/seo",
-    },
-    {
-      title: "تحسين البريد الإلكتروني",
-      icon: Mail,
-      href: "/admin/email",
-    },
-    {
-      title: "الإعلانات",
-      icon: Circle,
-      href: "/admin/advertisements",
-    },
-    {
-      title: "أكواد إضافية",
-      icon: Code,
-      href: "/admin/custom-code",
-    },
-    {
-      title: "الإعدادات",
-      icon: Settings,
-      href: "/admin/settings",
-    },
-  ];
 
   return (
     <div
@@ -138,88 +41,20 @@ export const AdminSidebar = () => {
       </div>
 
       <nav className="p-2">
-        {sidebarItems.map((item) => (
+        {sidebarItems.map((item: SidebarItem) => (
           <div key={item.href} className="my-1">
             {item.children ? (
-              <div>
-                <Button
-                  variant="ghost"
-                  className={cn(
-                    "w-full justify-start py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50",
-                    collapsed && "justify-center px-0"
-                  )}
-                  onClick={() => toggleSubmenu(item.title)}
-                >
-                  {collapsed ? (
-                    <Tooltip delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <item.icon className="h-5 w-5" />
-                      </TooltipTrigger>
-                      <TooltipContent side="right">{item.title}</TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <>
-                      <item.icon className="ml-2 h-5 w-5" />
-                      <span>{item.title}</span>
-                      <div className="mr-auto">
-                        {openSubmenus[item.title] ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </div>
-                    </>
-                  )}
-                </Button>
-
-                {!collapsed && openSubmenus[item.title] && (
-                  <div className="mr-6 border-r border-gray-200 pr-2 mt-1 space-y-1">
-                    {item.children.map((child) => (
-                      <NavLink
-                        key={child.href}
-                        to={child.href}
-                        className={({ isActive }) =>
-                          cn(
-                            "block py-2 px-3 rounded-md transition-colors",
-                            isActive
-                              ? "bg-blue-50 text-blue-600"
-                              : "text-gray-600 hover:bg-gray-100"
-                          )
-                        }
-                      >
-                        {child.title}
-                      </NavLink>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <SidebarSubmenu
+                item={item}
+                collapsed={collapsed}
+                isOpen={openSubmenus[item.title]}
+                onToggle={() => toggleSubmenu(item.title)}
+              />
             ) : (
-              <NavLink
-                to={item.href}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center py-2 px-3 rounded-md transition-colors",
-                    isActive
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700 hover:bg-gray-100",
-                    collapsed && "justify-center px-0"
-                  )
-                }
-              >
-                {collapsed ? (
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <item.icon className="h-5 w-5" />
-                    </TooltipTrigger>
-                    <TooltipContent side="right">{item.title}</TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <>
-                    <item.icon className="ml-2 h-5 w-5" />
-                    <span>{item.title}</span>
-                  </>
-                )}
-              </NavLink>
+              <SidebarMenuItem
+                item={item}
+                collapsed={collapsed}
+              />
             )}
           </div>
         ))}
