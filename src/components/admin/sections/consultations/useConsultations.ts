@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 // Define types for our consultations
@@ -68,7 +68,10 @@ const mockConsultations: Consultation[] = [
 ];
 
 export const useConsultations = () => {
-  const [consultations, setConsultations] = useState<Consultation[]>(mockConsultations);
+  // Use useRef to store the original mock data to be able to refresh
+  const originalConsultationsRef = useRef<Consultation[]>([...mockConsultations]);
+  
+  const [consultations, setConsultations] = useState<Consultation[]>([...mockConsultations]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "replied" | "closed">("all");
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
@@ -81,6 +84,15 @@ export const useConsultations = () => {
   const [newStatus, setNewStatus] = useState<"pending" | "replied" | "closed">("pending");
 
   const { toast } = useToast();
+
+  // Add a function to refresh consultations
+  const refreshConsultations = useCallback(() => {
+    setConsultations([...originalConsultationsRef.current]);
+    
+    // Reset filters
+    setSearchTerm("");
+    setStatusFilter("all");
+  }, []);
 
   const filteredConsultations = useMemo(() => {
     return consultations.filter(consultation => {
@@ -180,9 +192,7 @@ export const useConsultations = () => {
         });
 
         // Also update the selected consultation to reflect the new status
-        if (selectedConsultation) {
-          setSelectedConsultation({ ...selectedConsultation, status: newStatus });
-        }
+        setSelectedConsultation({ ...selectedConsultation, status: newStatus });
       }
       
       setStatusChangeDialogOpen(false);
@@ -276,6 +286,7 @@ export const useConsultations = () => {
     handleOpenReplyDialog,
     handleOpenDeleteDialog,
     handleOpenStatusChangeDialog,
-    isProcessing
+    isProcessing,
+    refreshConsultations
   };
 };

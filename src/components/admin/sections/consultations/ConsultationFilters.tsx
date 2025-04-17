@@ -8,13 +8,15 @@ interface ConsultationFiltersProps {
   setSearchTerm: (term: string) => void;
   statusFilter: "all" | "pending" | "replied" | "closed";
   setStatusFilter: (status: "all" | "pending" | "replied" | "closed") => void;
+  disabled?: boolean;
 }
 
 export const ConsultationFilters = ({ 
   searchTerm, 
   setSearchTerm, 
   statusFilter, 
-  setStatusFilter 
+  setStatusFilter,
+  disabled = false
 }: ConsultationFiltersProps) => {
   return (
     <div className="flex flex-col sm:flex-row gap-4">
@@ -25,6 +27,7 @@ export const ConsultationFilters = ({
           className="pr-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          disabled={disabled}
         />
       </div>
       
@@ -33,6 +36,7 @@ export const ConsultationFilters = ({
         <Select
           value={statusFilter}
           onValueChange={(value: "all" | "pending" | "replied" | "closed") => setStatusFilter(value)}
+          disabled={disabled}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="فلتر الحالة" />

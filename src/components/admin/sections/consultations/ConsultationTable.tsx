@@ -11,8 +11,9 @@ interface ConsultationTableProps {
   onView: (consultation: Consultation) => void;
   onReply: (consultation: Consultation) => void;
   onDelete: (consultation: Consultation) => void;
-  onChangeStatus?: (consultation: Consultation) => void;
+  onChangeStatus: (consultation: Consultation) => void;
   formatDate: (date: string) => string;
+  disabled?: boolean;
 }
 
 export const ConsultationTable = ({ 
@@ -21,7 +22,8 @@ export const ConsultationTable = ({
   onReply, 
   onDelete,
   onChangeStatus,
-  formatDate 
+  formatDate,
+  disabled = false
 }: ConsultationTableProps) => {
   if (consultations.length === 0) {
     return (
@@ -79,33 +81,27 @@ export const ConsultationTable = ({
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" disabled={disabled}>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onView(item)}>
+                    <DropdownMenuItem onClick={() => onView(item)} disabled={disabled}>
                       <Eye className="ml-2 h-4 w-4" />
                       عرض التفاصيل
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onReply(item)}>
+                    <DropdownMenuItem onClick={() => onReply(item)} disabled={disabled}>
                       <Send className="ml-2 h-4 w-4" />
                       إرسال رد
                     </DropdownMenuItem>
-                    {onChangeStatus && (
-                      <DropdownMenuItem onClick={() => {
-                        onView(item);
-                        setTimeout(() => {
-                          if (onChangeStatus) onChangeStatus(item);
-                        }, 100);
-                      }}>
-                        <Clock className="ml-2 h-4 w-4" />
-                        تغيير الحالة
-                      </DropdownMenuItem>
-                    )}
+                    <DropdownMenuItem onClick={() => onChangeStatus(item)} disabled={disabled}>
+                      <Clock className="ml-2 h-4 w-4" />
+                      تغيير الحالة
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => onDelete(item)}
                       className="text-red-600 hover:text-red-700 focus:text-red-700"
+                      disabled={disabled}
                     >
                       <Trash2 className="ml-2 h-4 w-4" />
                       حذف

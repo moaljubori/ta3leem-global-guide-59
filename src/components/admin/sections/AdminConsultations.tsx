@@ -6,6 +6,7 @@ import { ConsultationTable } from "./consultations/ConsultationTable";
 import { ConsultationDialogs } from "./consultations/ConsultationDialogs";
 import { useConsultations } from "./consultations/useConsultations";
 import { useCallback, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export const AdminConsultations = () => {
   const {
@@ -32,18 +33,32 @@ export const AdminConsultations = () => {
     handleOpenReplyDialog,
     handleOpenDeleteDialog,
     handleOpenStatusChangeDialog,
-    isProcessing
+    isProcessing,
+    refreshConsultations
   } = useConsultations();
 
   const [refreshing, setRefreshing] = useState(false);
+  const { toast } = useToast();
 
   const handleRefresh = useCallback(() => {
+    if (refreshing || isProcessing) return;
+    
     setRefreshing(true);
-    // Simulate refresh
+    
+    // Call the actual refresh function
+    refreshConsultations();
+    
+    // Show refresh feedback
+    toast({
+      title: "تحديث البيانات",
+      description: "تم تحديث قائمة الاستشارات بنجاح",
+    });
+    
+    // Reset refreshing state after animation
     setTimeout(() => {
       setRefreshing(false);
     }, 800);
-  }, []);
+  }, [refreshing, isProcessing, refreshConsultations, toast]);
 
   return (
     <div className="space-y-6">
@@ -53,7 +68,7 @@ export const AdminConsultations = () => {
           variant="outline" 
           className="flex items-center" 
           onClick={handleRefresh}
-          disabled={refreshing}
+          disabled={refreshing || isProcessing}
         >
           <RefreshCw className={`ml-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           تحديث
@@ -65,6 +80,7 @@ export const AdminConsultations = () => {
         setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
+        disabled={isProcessing}
       />
       
       <ConsultationTable
@@ -78,7 +94,12 @@ export const AdminConsultations = () => {
           handleViewConsultation(consultation);
           handleOpenDeleteDialog();
         }}
+        onChangeStatus={(consultation) => {
+          handleViewConsultation(consultation);
+          handleOpenStatusChangeDialog();
+        }}
         formatDate={formatDate}
+        disabled={isProcessing}
       />
       
       <ConsultationDialogs
