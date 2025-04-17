@@ -4,15 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Eye, Send, Trash2, AlertCircle } from "lucide-react";
 import { ConsultationStatusBadge } from "./ConsultationStatusBadge";
-
-interface Consultation {
-  id: string;
-  name: string;
-  email: string;
-  subject: string;
-  status: string;
-  created_at: string;
-}
+import { Consultation } from "./useConsultations";
 
 interface ConsultationTableProps {
   consultations: Consultation[];
@@ -31,13 +23,29 @@ export const ConsultationTable = ({
 }: ConsultationTableProps) => {
   if (consultations.length === 0) {
     return (
-      <TableRow>
-        <TableCell colSpan={6} className="text-center py-10">
-          <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-          <p className="text-gray-500 mb-1">لا توجد استشارات تطابق معايير البحث</p>
-          <p className="text-sm text-gray-400">حاول تغيير معايير البحث أو الفلترة</p>
-        </TableCell>
-      </TableRow>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-right">الاسم</TableHead>
+              <TableHead className="text-right hidden md:table-cell">البريد الإلكتروني</TableHead>
+              <TableHead className="text-right">الموضوع</TableHead>
+              <TableHead className="text-right hidden lg:table-cell">التاريخ</TableHead>
+              <TableHead className="text-right">الحالة</TableHead>
+              <TableHead className="text-left">الإجراءات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell colSpan={6} className="text-center py-10">
+                <AlertCircle className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                <p className="text-gray-500 mb-1">لا توجد استشارات تطابق معايير البحث</p>
+                <p className="text-sm text-gray-400">حاول تغيير معايير البحث أو الفلترة</p>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
     );
   }
 

@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,17 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Mail, Send, Trash2 } from "lucide-react";
 import { ConsultationStatusBadge } from "./ConsultationStatusBadge";
-
-interface Consultation {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-  status: string;
-  created_at: string;
-}
+import { Consultation } from "./useConsultations";
 
 interface ConsultationDialogsProps {
   selectedConsultation: Consultation | null;
