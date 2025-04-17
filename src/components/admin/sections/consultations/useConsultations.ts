@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,7 +13,7 @@ export interface Consultation {
   created_at: string;
 }
 
-const mockConsultations = [
+const mockConsultations: Consultation[] = [
   {
     id: "1",
     name: "محمد أحمد",
@@ -70,7 +69,7 @@ const mockConsultations = [
 export const useConsultations = () => {
   const [consultations, setConsultations] = useState<Consultation[]>(mockConsultations);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "replied" | "closed">("all");
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [replyDialogOpen, setReplyDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -105,7 +104,7 @@ export const useConsultations = () => {
     setConsultations(prev => 
       prev.map(item => 
         item.id === selectedConsultation?.id 
-          ? { ...item, status: "replied" } 
+          ? { ...item, status: "replied" as const } 
           : item
       )
     );

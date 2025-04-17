@@ -2,7 +2,7 @@
 import { Clock, CheckCircle, Ban } from "lucide-react";
 
 interface ConsultationStatusBadgeProps {
-  status: "pending" | "replied" | "closed" | string;
+  status: "pending" | "replied" | "closed";
 }
 
 export const ConsultationStatusBadge = ({ status }: ConsultationStatusBadgeProps) => {
