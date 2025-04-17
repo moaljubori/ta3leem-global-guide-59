@@ -6,8 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ConsultationFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  statusFilter: string;
-  setStatusFilter: (status: string) => void;
+  statusFilter: "all" | "pending" | "replied" | "closed";
+  setStatusFilter: (status: "all" | "pending" | "replied" | "closed") => void;
 }
 
 export const ConsultationFilters = ({ 
