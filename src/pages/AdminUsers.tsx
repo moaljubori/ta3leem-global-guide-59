@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Search, UserPlus, UserCog, UserX, Check, X, MoreHorizontal, Lock, Mail, Shield, Pencil, Eye
+  Search, UserPlus, UserCog, UserX, Check, X, MoreHorizontal, Lock, Mail, Shield, Pencil, Eye, Key
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -26,6 +26,7 @@ type User = {
   id: string;
   name: string;
   email: string;
+  password?: string;
   role: "admin" | "editor" | "viewer";
   status: "active" | "pending" | "suspended";
   lastLogin: string | null;
@@ -103,6 +104,7 @@ const AdminUsers = () => {
       id: "",
       name: "",
       email: "",
+      password: "",
       role: "viewer",
       status: "pending",
       lastLogin: null,
@@ -145,6 +147,12 @@ const AdminUsers = () => {
       // Add new user
       const newId = String(Math.max(...users.map(u => parseInt(u.id)), 0) + 1);
       const newUser = { ...currentUser, id: newId };
+      
+      if (newUser.password) {
+        // If password is set, automatically activate the account
+        newUser.status = "active";
+      }
+      
       setUsers([...users, newUser]);
       
       toast({
@@ -289,7 +297,7 @@ const AdminUsers = () => {
           <DialogHeader>
             <DialogTitle>إضافة مستخدم جديد</DialogTitle>
             <DialogDescription>
-              أدخل تفاصيل المستخدم الجديد. سيتم إرسال رسالة دعوة لتفعيل الحساب.
+              أدخل تفاصيل المستخدم الجديد. يمكنك تعيين كلمة مرور مباشرة أو إرسال رسالة دعوة للتفعيل.
             </DialogDescription>
           </DialogHeader>
           
@@ -314,6 +322,20 @@ const AdminUsers = () => {
                   onChange={(e) => setCurrentUser(prev => prev ? {...prev, email: e.target.value} : null)}
                   placeholder="أدخل البريد الإلكتروني"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">كلمة المرور (اختياري)</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={currentUser?.password || ""}
+                  onChange={(e) => setCurrentUser(prev => prev ? {...prev, password: e.target.value} : null)}
+                  placeholder="تعيين كلمة مرور (تفعيل تلقائي)"
+                />
+                <p className="text-xs text-muted-foreground">
+                  إذا تم تعيين كلمة مرور، سيتم تفعيل الحساب تلقائيًا بدون إرسال دعوة
+                </p>
               </div>
               
               <div className="space-y-2">
@@ -408,6 +430,20 @@ const AdminUsers = () => {
                     <SelectItem value="suspended">معلق</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-password">تعيين كلمة مرور جديدة (اختياري)</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={currentUser?.password || ""}
+                  onChange={(e) => setCurrentUser(prev => prev ? {...prev, password: e.target.value} : null)}
+                  placeholder="اترك فارغاً للإبقاء على كلمة المرور الحالية"
+                />
+                <p className="text-xs text-muted-foreground">
+                  تعيين كلمة مرور جديدة للمستخدم
+                </p>
               </div>
             </div>
           </div>
@@ -590,6 +626,11 @@ const AdminUsers = () => {
                     <DropdownMenuItem onClick={() => handleResetPassword(user)}>
                       <Lock className="ml-2 h-4 w-4" />
                       إعادة تعيين كلمة المرور
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem onClick={() => handleEditUser({ ...user, password: "" })}>
+                      <Key className="ml-2 h-4 w-4" />
+                      تعيين كلمة مرور
                     </DropdownMenuItem>
                     
                     {user.status === "pending" && (

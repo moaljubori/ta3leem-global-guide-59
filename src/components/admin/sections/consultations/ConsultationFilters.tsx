@@ -32,7 +32,7 @@ export const ConsultationFilters = ({
         <Filter className="h-4 w-4 text-gray-500" />
         <Select
           value={statusFilter}
-          onValueChange={setStatusFilter}
+          onValueChange={(value: "all" | "pending" | "replied" | "closed") => setStatusFilter(value)}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="فلتر الحالة" />
