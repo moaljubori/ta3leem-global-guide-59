@@ -2,7 +2,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Send, Trash2, AlertCircle } from "lucide-react";
+import { MoreHorizontal, Eye, Send, Trash2, AlertCircle, Clock } from "lucide-react";
 import { ConsultationStatusBadge } from "./ConsultationStatusBadge";
 import { Consultation } from "./useConsultations";
 
@@ -11,6 +11,7 @@ interface ConsultationTableProps {
   onView: (consultation: Consultation) => void;
   onReply: (consultation: Consultation) => void;
   onDelete: (consultation: Consultation) => void;
+  onChangeStatus?: (consultation: Consultation) => void;
   formatDate: (date: string) => string;
 }
 
@@ -19,6 +20,7 @@ export const ConsultationTable = ({
   onView, 
   onReply, 
   onDelete,
+  onChangeStatus,
   formatDate 
 }: ConsultationTableProps) => {
   if (consultations.length === 0) {
@@ -90,6 +92,17 @@ export const ConsultationTable = ({
                       <Send className="ml-2 h-4 w-4" />
                       إرسال رد
                     </DropdownMenuItem>
+                    {onChangeStatus && (
+                      <DropdownMenuItem onClick={() => {
+                        onView(item);
+                        setTimeout(() => {
+                          if (onChangeStatus) onChangeStatus(item);
+                        }, 100);
+                      }}>
+                        <Clock className="ml-2 h-4 w-4" />
+                        تغيير الحالة
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => onDelete(item)}
                       className="text-red-600 hover:text-red-700 focus:text-red-700"

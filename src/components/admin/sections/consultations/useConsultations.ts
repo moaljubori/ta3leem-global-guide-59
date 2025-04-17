@@ -75,8 +75,10 @@ export const useConsultations = () => {
   const [replyDialogOpen, setReplyDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [statusChangeDialogOpen, setStatusChangeDialogOpen] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [newStatus, setNewStatus] = useState<"pending" | "replied" | "closed">("pending");
 
   const { toast } = useToast();
 
@@ -153,6 +155,41 @@ export const useConsultations = () => {
     }, 300);
   }, [selectedConsultation, toast, isProcessing]);
 
+  const handleChangeStatus = useCallback(() => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      if (selectedConsultation) {
+        setConsultations(prev => 
+          prev.map(item => 
+            item.id === selectedConsultation.id 
+              ? { ...item, status: newStatus } 
+              : item
+          )
+        );
+        
+        toast({
+          title: "تم تغيير الحالة بنجاح",
+          description: `تم تغيير حالة الاستشارة إلى ${
+            newStatus === "pending" ? "قيد الانتظار" : 
+            newStatus === "replied" ? "تم الرد" : "مغلق"
+          }`,
+        });
+
+        // Also update the selected consultation to reflect the new status
+        if (selectedConsultation) {
+          setSelectedConsultation({ ...selectedConsultation, status: newStatus });
+        }
+      }
+      
+      setStatusChangeDialogOpen(false);
+      setIsProcessing(false);
+    }, 300);
+  }, [selectedConsultation, newStatus, toast, isProcessing]);
+
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('ar-SA', { 
@@ -170,11 +207,13 @@ export const useConsultations = () => {
     setViewDialogOpen(false);
     setReplyDialogOpen(false);
     setDeleteDialogOpen(false);
+    setStatusChangeDialogOpen(false);
     
     // Use setTimeout to ensure modal animation completes before clearing selection
     setTimeout(() => {
       setSelectedConsultation(null);
       setReplyMessage("");
+      setNewStatus("pending");
     }, 300);
   }, [isProcessing]);
 
@@ -182,6 +221,7 @@ export const useConsultations = () => {
     if (isProcessing) return;
     
     setSelectedConsultation(consultation);
+    setNewStatus(consultation.status); // Initialize the status change with current status
     setViewDialogOpen(true);
   }, [isProcessing]);
 
@@ -203,6 +243,15 @@ export const useConsultations = () => {
     }, 100);
   }, [isProcessing]);
 
+  const handleOpenStatusChangeDialog = useCallback(() => {
+    if (isProcessing) return;
+    
+    setViewDialogOpen(false);
+    setTimeout(() => {
+      setStatusChangeDialogOpen(true);
+    }, 100);
+  }, [isProcessing]);
+
   return {
     consultations: filteredConsultations,
     searchTerm,
@@ -213,15 +262,20 @@ export const useConsultations = () => {
     replyDialogOpen,
     viewDialogOpen,
     deleteDialogOpen,
+    statusChangeDialogOpen,
     replyMessage,
     setReplyMessage,
+    newStatus,
+    setNewStatus,
     handleSendReply,
     handleDeleteConsultation,
+    handleChangeStatus,
     formatDate,
     closeDialog,
     handleViewConsultation,
     handleOpenReplyDialog,
     handleOpenDeleteDialog,
+    handleOpenStatusChangeDialog,
     isProcessing
   };
 };

@@ -9,23 +9,35 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Mail, Send, Trash2, Loader2 } from "lucide-react";
+import { Mail, Send, Trash2, Loader2, Clock } from "lucide-react";
 import { ConsultationStatusBadge } from "./ConsultationStatusBadge";
 import { Consultation } from "./useConsultations";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 
 interface ConsultationDialogsProps {
   selectedConsultation: Consultation | null;
   viewDialogOpen: boolean;
   replyDialogOpen: boolean;
   deleteDialogOpen: boolean;
+  statusChangeDialogOpen?: boolean;
   replyMessage: string;
   setReplyMessage: (message: string) => void;
+  newStatus?: "pending" | "replied" | "closed";
+  setNewStatus?: (status: "pending" | "replied" | "closed") => void;
   onCloseDialog: () => void;
   onSendReply: () => void;
   onDelete: () => void;
+  onChangeStatus?: () => void;
   formatDate: (date: string) => string;
   onOpenReplyDialog: () => void;
   onOpenDeleteDialog: () => void;
+  onOpenStatusChangeDialog?: () => void;
   isProcessing?: boolean;
 }
 
@@ -34,14 +46,19 @@ export const ConsultationDialogs = ({
   viewDialogOpen,
   replyDialogOpen,
   deleteDialogOpen,
+  statusChangeDialogOpen = false,
   replyMessage,
   setReplyMessage,
+  newStatus = "pending",
+  setNewStatus = () => {},
   onCloseDialog,
   onSendReply,
   onDelete,
+  onChangeStatus = () => {},
   formatDate,
   onOpenReplyDialog,
   onOpenDeleteDialog,
+  onOpenStatusChangeDialog = () => {},
   isProcessing = false,
 }: ConsultationDialogsProps) => {
   return (
@@ -105,6 +122,11 @@ export const ConsultationDialogs = ({
             </Button>
             
             <div className="space-x-2 space-x-reverse">
+              <Button variant="secondary" onClick={onOpenStatusChangeDialog} disabled={isProcessing}>
+                <Clock className="ml-2 h-4 w-4" />
+                تغيير الحالة
+              </Button>
+              
               <Button variant="secondary" onClick={onOpenReplyDialog} disabled={isProcessing}>
                 <Send className="ml-2 h-4 w-4" />
                 إرسال رد
@@ -201,6 +223,63 @@ export const ConsultationDialogs = ({
                 <>
                   <Trash2 className="ml-2 h-4 w-4" />
                   تأكيد الحذف
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={statusChangeDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Clock className="ml-2 h-5 w-5" />
+              تغيير حالة الاستشارة
+            </DialogTitle>
+            <DialogDescription>
+              {selectedConsultation && `تغيير حالة استشارة ${selectedConsultation.name}`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedConsultation && (
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <label htmlFor="status" className="text-sm font-medium">
+                  اختر الحالة الجديدة:
+                </label>
+                <Select 
+                  value={newStatus} 
+                  onValueChange={(value: "pending" | "replied" | "closed") => setNewStatus(value)}
+                  disabled={isProcessing}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="اختر الحالة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">قيد الانتظار</SelectItem>
+                    <SelectItem value="replied">تم الرد</SelectItem>
+                    <SelectItem value="closed">مغلق</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
+              إلغاء
+            </Button>
+            <Button onClick={onChangeStatus} disabled={isProcessing}>
+              {isProcessing ? (
+                <>
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  جاري التحديث...
+                </>
+              ) : (
+                <>
+                  <Clock className="ml-2 h-4 w-4" />
+                  تحديث الحالة
                 </>
               )}
             </Button>
