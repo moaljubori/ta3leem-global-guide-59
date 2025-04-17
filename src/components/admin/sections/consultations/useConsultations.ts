@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -75,6 +76,7 @@ export const useConsultations = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { toast } = useToast();
 
@@ -92,6 +94,8 @@ export const useConsultations = () => {
   }, [consultations, searchTerm, statusFilter]);
 
   const handleSendReply = useCallback(() => {
+    if (isProcessing) return;
+    
     if (!replyMessage.trim()) {
       toast({
         title: "خطأ",
@@ -101,35 +105,53 @@ export const useConsultations = () => {
       return;
     }
     
-    setConsultations(prev => 
-      prev.map(item => 
-        item.id === selectedConsultation?.id 
-          ? { ...item, status: "replied" as const } 
-          : item
-      )
-    );
+    setIsProcessing(true);
     
-    toast({
-      title: "تم إرسال الرد بنجاح",
-      description: `تم الرد على استفسار ${selectedConsultation?.name}`,
-    });
-    
-    setReplyMessage("");
-    setReplyDialogOpen(false);
-  }, [replyMessage, selectedConsultation, toast]);
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      if (selectedConsultation) {
+        setConsultations(prev => 
+          prev.map(item => 
+            item.id === selectedConsultation.id 
+              ? { ...item, status: "replied" } 
+              : item
+          )
+        );
+        
+        toast({
+          title: "تم إرسال الرد بنجاح",
+          description: `تم الرد على استفسار ${selectedConsultation.name}`,
+        });
+      }
+      
+      setReplyMessage("");
+      setReplyDialogOpen(false);
+      setIsProcessing(false);
+    }, 300);
+  }, [replyMessage, selectedConsultation, toast, isProcessing]);
 
   const handleDeleteConsultation = useCallback(() => {
-    setConsultations(prev => 
-      prev.filter(item => item.id !== selectedConsultation?.id)
-    );
+    if (isProcessing) return;
     
-    toast({
-      title: "تم الحذف بنجاح",
-      description: "تم حذف الاستشارة من النظام",
-    });
+    setIsProcessing(true);
     
-    setDeleteDialogOpen(false);
-  }, [selectedConsultation, toast]);
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      if (selectedConsultation) {
+        setConsultations(prev => 
+          prev.filter(item => item.id !== selectedConsultation.id)
+        );
+        
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الاستشارة من النظام",
+        });
+      }
+      
+      setDeleteDialogOpen(false);
+      setIsProcessing(false);
+    }, 300);
+  }, [selectedConsultation, toast, isProcessing]);
 
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
@@ -143,26 +165,43 @@ export const useConsultations = () => {
   }, []);
 
   const closeDialog = useCallback(() => {
+    if (isProcessing) return;
+    
     setViewDialogOpen(false);
     setReplyDialogOpen(false);
     setDeleteDialogOpen(false);
-    setTimeout(() => setSelectedConsultation(null), 300);
-  }, []);
+    
+    // Use setTimeout to ensure modal animation completes before clearing selection
+    setTimeout(() => {
+      setSelectedConsultation(null);
+      setReplyMessage("");
+    }, 300);
+  }, [isProcessing]);
 
   const handleViewConsultation = useCallback((consultation: Consultation) => {
+    if (isProcessing) return;
+    
     setSelectedConsultation(consultation);
     setViewDialogOpen(true);
-  }, []);
+  }, [isProcessing]);
 
   const handleOpenReplyDialog = useCallback(() => {
+    if (isProcessing) return;
+    
     setViewDialogOpen(false);
-    setReplyDialogOpen(true);
-  }, []);
+    setTimeout(() => {
+      setReplyDialogOpen(true);
+    }, 100);
+  }, [isProcessing]);
 
   const handleOpenDeleteDialog = useCallback(() => {
+    if (isProcessing) return;
+    
     setViewDialogOpen(false);
-    setDeleteDialogOpen(true);
-  }, []);
+    setTimeout(() => {
+      setDeleteDialogOpen(true);
+    }, 100);
+  }, [isProcessing]);
 
   return {
     consultations: filteredConsultations,
@@ -171,13 +210,9 @@ export const useConsultations = () => {
     statusFilter,
     setStatusFilter,
     selectedConsultation,
-    setSelectedConsultation,
     replyDialogOpen,
-    setReplyDialogOpen,
     viewDialogOpen,
-    setViewDialogOpen,
     deleteDialogOpen,
-    setDeleteDialogOpen,
     replyMessage,
     setReplyMessage,
     handleSendReply,
@@ -186,6 +221,7 @@ export const useConsultations = () => {
     closeDialog,
     handleViewConsultation,
     handleOpenReplyDialog,
-    handleOpenDeleteDialog
+    handleOpenDeleteDialog,
+    isProcessing
   };
 };

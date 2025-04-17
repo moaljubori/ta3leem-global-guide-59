@@ -25,7 +25,8 @@ export const AdminConsultations = () => {
     closeDialog,
     handleViewConsultation,
     handleOpenReplyDialog,
-    handleOpenDeleteDialog
+    handleOpenDeleteDialog,
+    isProcessing
   } = useConsultations();
 
   return (
@@ -72,6 +73,7 @@ export const AdminConsultations = () => {
         formatDate={formatDate}
         onOpenReplyDialog={handleOpenReplyDialog}
         onOpenDeleteDialog={handleOpenDeleteDialog}
+        isProcessing={isProcessing}
       />
     </div>
   );

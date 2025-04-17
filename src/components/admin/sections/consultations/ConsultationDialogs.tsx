@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Mail, Send, Trash2 } from "lucide-react";
+import { Mail, Send, Trash2, Loader2 } from "lucide-react";
 import { ConsultationStatusBadge } from "./ConsultationStatusBadge";
 import { Consultation } from "./useConsultations";
 
@@ -25,6 +26,7 @@ interface ConsultationDialogsProps {
   formatDate: (date: string) => string;
   onOpenReplyDialog: () => void;
   onOpenDeleteDialog: () => void;
+  isProcessing?: boolean;
 }
 
 export const ConsultationDialogs = ({
@@ -40,10 +42,11 @@ export const ConsultationDialogs = ({
   formatDate,
   onOpenReplyDialog,
   onOpenDeleteDialog,
+  isProcessing = false,
 }: ConsultationDialogsProps) => {
   return (
     <>
-      <Dialog open={viewDialogOpen} onOpenChange={onCloseDialog}>
+      <Dialog open={viewDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>تفاصيل الاستشارة</DialogTitle>
@@ -97,17 +100,17 @@ export const ConsultationDialogs = ({
           )}
           
           <DialogFooter className="flex flex-row justify-between sm:justify-between gap-2">
-            <Button variant="outline" onClick={onCloseDialog}>
+            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
               إغلاق
             </Button>
             
             <div className="space-x-2 space-x-reverse">
-              <Button variant="secondary" onClick={onOpenReplyDialog}>
+              <Button variant="secondary" onClick={onOpenReplyDialog} disabled={isProcessing}>
                 <Send className="ml-2 h-4 w-4" />
                 إرسال رد
               </Button>
               
-              <Button variant="destructive" onClick={onOpenDeleteDialog}>
+              <Button variant="destructive" onClick={onOpenDeleteDialog} disabled={isProcessing}>
                 <Trash2 className="ml-2 h-4 w-4" />
                 حذف
               </Button>
@@ -116,7 +119,7 @@ export const ConsultationDialogs = ({
         </DialogContent>
       </Dialog>
       
-      <Dialog open={replyDialogOpen} onOpenChange={onCloseDialog}>
+      <Dialog open={replyDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center">
@@ -148,24 +151,34 @@ export const ConsultationDialogs = ({
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="اكتب ردك هنا..."
+                  disabled={isProcessing}
                 />
               </div>
             </div>
           )}
           
           <DialogFooter>
-            <Button variant="outline" onClick={onCloseDialog}>
+            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
               إلغاء
             </Button>
-            <Button onClick={onSendReply}>
-              <Send className="ml-2 h-4 w-4" />
-              إرسال الرد
+            <Button onClick={onSendReply} disabled={isProcessing}>
+              {isProcessing ? (
+                <>
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  جاري الإرسال...
+                </>
+              ) : (
+                <>
+                  <Send className="ml-2 h-4 w-4" />
+                  إرسال الرد
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       
-      <Dialog open={deleteDialogOpen} onOpenChange={onCloseDialog}>
+      <Dialog open={deleteDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-red-600">تأكيد الحذف</DialogTitle>
@@ -175,12 +188,21 @@ export const ConsultationDialogs = ({
           </DialogHeader>
           
           <DialogFooter>
-            <Button variant="outline" onClick={onCloseDialog}>
+            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
               إلغاء
             </Button>
-            <Button variant="destructive" onClick={onDelete}>
-              <Trash2 className="ml-2 h-4 w-4" />
-              تأكيد الحذف
+            <Button variant="destructive" onClick={onDelete} disabled={isProcessing}>
+              {isProcessing ? (
+                <>
+                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="ml-2 h-4 w-4" />
+                  تأكيد الحذف
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
