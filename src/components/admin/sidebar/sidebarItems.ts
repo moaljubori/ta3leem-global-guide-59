@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   MessageSquare,
@@ -12,6 +11,7 @@ import {
   Mail,
   Globe,
   Circle,
+  List,
 } from "lucide-react";
 import { SidebarItem } from "./types";
 
@@ -20,6 +20,17 @@ export const sidebarItems: SidebarItem[] = [
     title: "لوحة التحكم",
     icon: LayoutDashboard,
     href: "/admin/dashboard",
+  },
+  {
+    title: "إدارة المحتوى",
+    icon: List,
+    href: "/admin/content",
+    children: [
+      { title: "النصوص", href: "/admin/content/text" },
+      { title: "الأزرار والروابط", href: "/admin/content/buttons" },
+      { title: "الأيقونات", href: "/admin/content/icons" },
+      { title: "الألوان", href: "/admin/content/colors" },
+    ],
   },
   {
     title: "صفحات الموقع",

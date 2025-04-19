@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,15 +10,15 @@ const contentSections = {
     title: "إدارة النصوص",
     description: "قم بتعديل نصوص الموقع من هنا",
     subsections: [
-      { id: "hero", title: "القسم الرئيسي" },
-      { id: "about", title: "من نحن" },
-      { id: "services", title: "خدماتنا" },
-      { id: "testimonials", title: "آراء العملاء" },
-      { id: "contact", title: "تواصل معنا" },
-      { id: "blog", title: "المدونة" },
-      { id: "countries", title: "الدول" },
-      { id: "privacy", title: "سياسة الخصوصية" },
-      { id: "terms", title: "الشروط والأحكام" }
+      { id: "hero", title: "القسم الرئيسي", path: "/admin/pages/home/hero" },
+      { id: "about", title: "من نحن", path: "/admin/pages/about/about" },
+      { id: "services", title: "خدماتنا", path: "/admin/pages/services/services" },
+      { id: "testimonials", title: "آراء العملاء", path: "/admin/pages/home/testimonials" },
+      { id: "contact", title: "تواصل معنا", path: "/admin/pages/contact/contact" },
+      { id: "blog", title: "المدونة", path: "/admin/pages/blog/blog" },
+      { id: "countries", title: "الدول", path: "/admin/pages/countries/countries" },
+      { id: "privacy", title: "سياسة الخصوصية", path: "/admin/pages/privacy/privacy" },
+      { id: "terms", title: "الشروط والأحكام", path: "/admin/pages/terms/terms" }
     ]
   },
   "buttons": {
@@ -52,7 +51,12 @@ const contentSections = {
 };
 
 const ContentSection = ({ section }: { section: string }) => {
+  const navigate = useNavigate();
   const sectionData = contentSections[section as keyof typeof contentSections];
+  
+  const handleSectionClick = (path: string) => {
+    navigate(path);
+  };
   
   return (
     <Card>
@@ -63,7 +67,11 @@ const ContentSection = ({ section }: { section: string }) => {
       <CardContent>
         <div className="grid gap-4">
           {sectionData.subsections.map((subsection) => (
-            <Card key={subsection.id} className="p-4">
+            <Card 
+              key={subsection.id} 
+              className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => handleSectionClick(subsection.path)}
+            >
               <h3 className="text-lg font-semibold mb-2">{subsection.title}</h3>
               <p className="text-sm text-gray-500">انقر للتعديل</p>
             </Card>

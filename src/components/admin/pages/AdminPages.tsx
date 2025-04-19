@@ -26,7 +26,7 @@ export const AdminPages = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">إدارة صفحات الموقع</h2>
-          <p className="text-gray-500 mt-2">قم بإدارة وتحرير جميع صفحات الموقع</p>
+          <p className="text-gray-500 mt-2">قم بإنشاء وتحرير صفحات الموقع</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="ml-2 h-4 w-4" />
