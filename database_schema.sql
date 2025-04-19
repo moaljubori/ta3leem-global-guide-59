@@ -17,8 +17,8 @@ CREATE TABLE admin_users (
     INDEX idx_role (role)
 );
 
--- Table: pages
--- Represents the structure of the website's pages.
+-- Table: pages Represents the structure of the website's pages.
+--
 -- Includes information for SEO and page content, with support for draft and published versions.
 CREATE TABLE pages (
     page_version_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -26,12 +26,13 @@ CREATE TABLE pages (
     url VARCHAR(255) UNIQUE NOT NULL,
     title VARCHAR(255) NOT NULL,
     meta_description TEXT,
+    parent_id INT,
+    `order` INT,
     meta_keywords TEXT,
-    is_published BOOLEAN DEFAULT FALSE, -- Indicates if this is the published version
-    is_draft BOOLEAN DEFAULT TRUE, -- Indicates if this is a draft version
+    is_published BOOLEAN DEFAULT FALSE,
     version INT DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,    
     INDEX idx_page_id (page_id),
     INDEX idx_is_draft (is_draft),
     INDEX idx_version(version)
@@ -39,7 +40,6 @@ CREATE TABLE pages (
 
 -- Table: page_versions
 -- Stores the history of page versions
-CREATE TABLE page_versions (
     page_version_id INT AUTO_INCREMENT PRIMARY KEY,
     page_id INT NOT NULL,
     
@@ -58,12 +58,12 @@ CREATE TABLE sections (
     section_id INT NOT NULL,
     page_version_id INT NOT NULL,
     type VARCHAR(255) NOT NULL, -- e.g., 'text', 'image', 'video'
+    name VARCHAR(255),
     content TEXT,
-    order_number INT,
-    is_published BOOLEAN DEFAULT FALSE, -- Indicates if this is the published version
-    is_draft BOOLEAN DEFAULT TRUE, -- Indicates if this is a draft version
+    `order` INT,
+    is_published BOOLEAN DEFAULT FALSE,
      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,    
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_type (type),
     FOREIGN KEY (page_version_id) REFERENCES page_versions(page_version_id) ON DELETE CASCADE,
     INDEX idx_order_number (order_number)
@@ -79,7 +79,8 @@ CREATE TABLE media_files (
     name VARCHAR(255) NOT NULL,
     path VARCHAR(255) NOT NULL,
     upload_date DATETIME,
-    is_published BOOLEAN DEFAULT FALSE,
+    `type` VARCHAR(50),
+    `size` INT,
     is_draft BOOLEAN DEFAULT TRUE, 
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -154,17 +155,16 @@ CREATE TABLE blog_posts (
     image_version_id INT,
     publish_date DATETIME,
     author_id INT,
+    url VARCHAR(255),
     is_published BOOLEAN DEFAULT FALSE,
     is_draft BOOLEAN DEFAULT TRUE,
+    category VARCHAR(255),
+    tags TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (page_version_id) REFERENCES page_versions(page_version_id) ON DELETE CASCADE,
     FOREIGN KEY (image_version_id) REFERENCES media_files(file_version_id) ON DELETE SET NULL,
-    FOREIGN KEY (author_id) REFERENCES admin_users(user_id) ON DELETE SET NULL,
-    INDEX idx_page_id (page_id),
-    INDEX idx_publish_date (publish_date)
+    FOREIGN KEY (author_id) REFERENCES admin_users(user_id) ON DELETE SET NULL
 );
-
--- Table: consultations
 
 CREATE TABLE blog_posts_versions (
     post_version_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -172,13 +172,14 @@ CREATE TABLE blog_posts_versions (
     FOREIGN KEY (post_id) REFERENCES blog_posts(post_id) ON DELETE CASCADE,
 
     page_version_id INT UNIQUE NOT NULL,
-);
+);    
 
 -- Stores information about user consultations.
 CREATE TABLE consultations (
     consultation_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
+    phone VARCHAR(255),
     phone VARCHAR(20),
     message TEXT,
     status VARCHAR(50) DEFAULT 'pending',
@@ -189,6 +190,7 @@ CREATE TABLE consultations (
 );
 
 -- Table: notifications
+--
 -- Stores notifications for the admin panel.
 CREATE TABLE notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -196,6 +198,7 @@ CREATE TABLE notifications (
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    type VARCHAR(50),
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES admin_users(user_id) ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
@@ -226,15 +229,14 @@ CREATE TABLE custom_code (
     name VARCHAR(255) UNIQUE NOT NULL,
     html_code TEXT,
     css_code TEXT,
+    is_published BOOLEAN DEFAULT FALSE,
     js_code TEXT,
     location VARCHAR(255),
     is_published BOOLEAN DEFAULT FALSE,
-    is_draft BOOLEAN DEFAULT TRUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_name (name)
 );
-
 
 CREATE TABLE custom_code_versions (
     code_version_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -253,10 +255,10 @@ CREATE TABLE settings (
     name VARCHAR(255) UNIQUE NOT NULL,
     value TEXT,
     type VARCHAR(50),
+    category VARCHAR(255),
     description TEXT,
     is_published BOOLEAN DEFAULT FALSE,
-    is_draft BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_name (name)
 );
@@ -264,6 +266,17 @@ CREATE TABLE settings (
 CREATE TABLE settings_versions (
     setting_version_id INT AUTO_INCREMENT PRIMARY KEY,
     setting_id INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_name (name)
+);
+
+-- Table: blog_categories
+CREATE TABLE blog_categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) UNIQUE NOT NULL,
+    description TEXT,
+    is_published BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_name (name)
@@ -279,11 +292,12 @@ CREATE TABLE advertisements (
     content TEXT,
     start_date DATETIME,
     end_date DATETIME,
-    is_active BOOLEAN DEFAULT FALSE,
+    url VARCHAR(255),
+    image_version_id INT,
     is_published BOOLEAN DEFAULT FALSE,
-    is_draft BOOLEAN DEFAULT TRUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,    
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (image_version_id) REFERENCES media_files(file_version_id) ON DELETE SET NULL,
     INDEX idx_is_active (is_active)
 );
 
@@ -292,53 +306,4 @@ CREATE TABLE advertisements_versions (
     advertisement_id INT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Table: headers
--- Stores website headers.
--- Supports draft and published versions.
-CREATE TABLE headers (
-    header_version_id INT AUTO_INCREMENT PRIMARY KEY,
-    header_id INT,
-    content TEXT NOT NULL,
-    is_published BOOLEAN DEFAULT FALSE,
-    is_draft BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,    
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-CREATE TABLE headers_versions (
-    header_version_id INT AUTO_INCREMENT PRIMARY KEY,
-    header_id INT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,    
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- Table: footers
--- Stores website footers.
--- Supports draft and published versions.
-CREATE TABLE footers (
-    footer_version_id INT AUTO_INCREMENT PRIMARY KEY,
-    footer_id INT,
-    content TEXT NOT NULL,
-    is_published BOOLEAN DEFAULT FALSE,
-    is_draft BOOLEAN DEFAULT TRUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,    
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-
-CREATE TABLE footers_versions (
-    footer_version_id INT AUTO_INCREMENT PRIMARY KEY,
-    footer_id INT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,    
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-
-
-
-
-
-
 
