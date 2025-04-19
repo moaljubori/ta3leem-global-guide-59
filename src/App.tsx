@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,6 +23,8 @@ import AdminPages from "./pages/AdminPages";
 import AdminBlog from "./pages/AdminBlog";
 import AdminConsultations from "./pages/AdminConsultations";
 import AdminSEO from "./pages/AdminSEO";
+import AdminContent from "./pages/AdminContent";
+import AdminMedia from "./pages/AdminMedia";
 
 // Create placeholder components for missing admin pages
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -36,7 +37,6 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminProfile from "./pages/AdminProfile";
 import PageEditor from "./pages/PageEditor";
 import AdminAdvertisements from "./pages/AdminAdvertisements";
-import AdminMedia from "./pages/AdminMedia";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,7 +76,14 @@ const App = () => (
           <Route path="/admin/seo" element={<AdminSEO />} />
           <Route path="/admin/media" element={<AdminMedia />} />
           
-          {/* Admin Routes */}
+          {/* Admin Content Routes */}
+          <Route path="/admin/content" element={<AdminContent />} />
+          <Route path="/admin/content/text" element={<AdminContent />} />
+          <Route path="/admin/content/buttons" element={<AdminContent />} />
+          <Route path="/admin/content/icons" element={<AdminContent />} />
+          <Route path="/admin/content/colors" element={<AdminContent />} />
+          
+          {/* Other Admin Routes */}
           <Route path="/admin/statistics" element={<AdminStatistics />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/notifications" element={<AdminNotifications />} />

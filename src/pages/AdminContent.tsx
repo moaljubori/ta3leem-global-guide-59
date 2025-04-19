@@ -1,8 +1,9 @@
 
+import { useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Placeholder for content subsections
 const ContentText = () => (
@@ -57,10 +58,22 @@ const AdminContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Extract the active tab from the URL path
+  const getActiveTab = () => {
+    if (location.pathname === "/admin/content") return "text";
+    const path = location.pathname.split("/");
+    return path[path.length - 1];
+  };
+
+  // Handle tab changes
+  const handleTabChange = (value: string) => {
+    navigate(`/admin/content/${value}`);
+  };
+  
   // Redirect to text page if path is exactly /admin/content
   useEffect(() => {
     if (location.pathname === "/admin/content") {
-      navigate("/admin/content/text");
+      navigate("/admin/content/text", { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -68,12 +81,31 @@ const AdminContent = () => {
     <AdminLayout>
       <div className="space-y-6">
         <h2 className="text-3xl font-bold tracking-tight">إدارة المحتوى</h2>
-        <Routes>
-          <Route path="/text" element={<ContentText />} />
-          <Route path="/buttons" element={<ContentButtons />} />
-          <Route path="/icons" element={<ContentIcons />} />
-          <Route path="/colors" element={<ContentColors />} />
-        </Routes>
+        
+        <Tabs value={getActiveTab()} onValueChange={handleTabChange}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="text">النصوص</TabsTrigger>
+            <TabsTrigger value="buttons">الأزرار والروابط</TabsTrigger>
+            <TabsTrigger value="icons">الأيقونات</TabsTrigger>
+            <TabsTrigger value="colors">الألوان</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="text">
+            <ContentText />
+          </TabsContent>
+          
+          <TabsContent value="buttons">
+            <ContentButtons />
+          </TabsContent>
+          
+          <TabsContent value="icons">
+            <ContentIcons />
+          </TabsContent>
+          
+          <TabsContent value="colors">
+            <ContentColors />
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );

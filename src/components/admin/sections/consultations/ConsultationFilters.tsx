@@ -21,7 +21,7 @@ export const ConsultationFilters = ({
   return (
     <div className="flex flex-col sm:flex-row gap-4">
       <div className="relative flex-1">
-        <Search className="absolute right-3 top-3 h-4 w-4 text-gray-500" />
+        <Search className="absolute right-3 top-3 h-4 w-4 text-gray-500" aria-hidden="true" />
         <Input
           placeholder="بحث بالاسم، البريد الإلكتروني، أو الموضوع..."
           className="pr-10"
@@ -33,13 +33,13 @@ export const ConsultationFilters = ({
       </div>
       
       <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-gray-500" />
+        <Filter className="h-4 w-4 text-gray-500" aria-hidden="true" />
         <Select
           value={statusFilter}
           onValueChange={(value: "all" | "pending" | "replied" | "closed") => setStatusFilter(value)}
           disabled={disabled}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[180px]" aria-label="فلتر الحالة">
             <SelectValue placeholder="فلتر الحالة" />
           </SelectTrigger>
           <SelectContent>

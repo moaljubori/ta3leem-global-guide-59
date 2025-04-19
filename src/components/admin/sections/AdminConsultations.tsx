@@ -40,24 +40,32 @@ export const AdminConsultations = () => {
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     if (refreshing || isProcessing) return;
     
     setRefreshing(true);
     
-    // Call the actual refresh function
-    refreshConsultations();
-    
-    // Show refresh feedback
-    toast({
-      title: "تحديث البيانات",
-      description: "تم تحديث قائمة الاستشارات بنجاح",
-    });
-    
-    // Reset refreshing state after animation
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 800);
+    try {
+      // Call the actual refresh function
+      await refreshConsultations();
+      
+      // Show refresh feedback
+      toast({
+        title: "تحديث البيانات",
+        description: "تم تحديث قائمة الاستشارات بنجاح",
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في التحديث",
+        description: "حدث خطأ أثناء تحديث البيانات، يرجى المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    } finally {
+      // Reset refreshing state after animation
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 800);
+    }
   }, [refreshing, isProcessing, refreshConsultations, toast]);
 
   return (
