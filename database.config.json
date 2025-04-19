@@ -1,6 +1,6 @@
 {
   "name": "MyDatabase",
-  "host": "localhost",
+  "host": "YOUR_DATABASE_HOST_HERE",
   "port": 5432,
   "username": "dbuser",
   "password": "dbpassword",
