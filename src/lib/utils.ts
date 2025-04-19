@@ -1,41 +1,31 @@
 
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import fs from 'fs';
-import path from 'path';
-import mysql from 'mysql2/promise';
 
 export function cn(...inputs: any[]) {
   return twMerge(clsx(inputs));
 }
 
-let dbConfig;
-try {
-  const configPath = path.join(__dirname, '../../database.config.json');
-  const configData = fs.readFileSync(configPath, 'utf8');
-  dbConfig = JSON.parse(configData);
-} catch (error) {
-  console.error(error);
-  throw new Error('Failed to read or parse database configuration file.');
-}
-
-export const createConnection = async () => {
-  if (!dbConfig) {
-    throw new Error('Database configuration is not loaded.');
-  }
-  try {
-    const connection = await mysql.createConnection({
-      host: dbConfig.host,
-      user: dbConfig.username,
-      password: dbConfig.password,
-      database: dbConfig.database
-    });
-    console.log('Database connected');
-    return connection;
-  } catch (error) {
-    console.error(error);
-    throw new Error('Failed to connect to the database.');
-  }
+// Mock configuration for client-side usage
+// In a production app, this would be handled by an API
+export const dbConfig = {
+  name: "MyDatabase",
+  host: "localhost",
+  port: 5432,
+  username: "dbuser",
+  password: "dbpassword",
+  database: "mydatabase"
 };
 
-export { dbConfig };
+// Client-side mock of database connection for development
+// In a production app, database operations would be performed via API endpoints
+export const createConnection = async () => {
+  console.log('Client attempting to connect to database - this should be handled by an API in production');
+  return {
+    query: async (sql: string, params: any[] = []) => {
+      console.log('Query executed:', sql, params);
+      return [[], []]; // Mock empty result
+    },
+    end: () => console.log('Connection closed')
+  };
+};
