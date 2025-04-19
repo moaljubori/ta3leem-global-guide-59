@@ -1,6 +1,3 @@
-import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { getSectionTitle } from "../utils/sectionUtils";
 
 export const pageSectionContents = {
   "hero": `# قسم البانر الرئيسي
@@ -205,34 +202,4 @@ export const pageSectionContents = {
 ## القانون الحاكم
 تخضع هذه الشروط والأحكام وتفسر وفقا لقوانين المملكة العربية السعودية، وتختص المحاكم السعودية بالفصل في أي نزاع ينشأ عن استخدام هذا الموقع.
 `,
-};
-
-export const usePageContent = (pageId: string | undefined, sectionId: string | undefined) => {
-  const [content, setContent] = useState("");
-  const [whatsappNumber, setWhatsappNumber] = useState("+966512345678");
-  const [whatsappMessage, setWhatsappMessage] = useState("مرحباً، أود الاستفسار عن خدماتكم...");
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const contentKey = sectionId || "";
-    const sectionContent = pageSectionContents[contentKey] || `# محتوى ${getSectionTitle(sectionId)}\n\nقم بإضافة المحتوى هنا.`;
-    setContent(sectionContent);
-  }, [pageId, sectionId]);
-
-  const handleSave = () => {
-    toast({
-      title: "تم حفظ التغييرات",
-      description: `تم تحديث محتوى ${getSectionTitle(sectionId)} بنجاح`,
-    });
-  };
-
-  return {
-    content,
-    setContent,
-    whatsappNumber,
-    setWhatsappNumber,
-    whatsappMessage,
-    setWhatsappMessage,
-    handleSave,
-  };
 };
