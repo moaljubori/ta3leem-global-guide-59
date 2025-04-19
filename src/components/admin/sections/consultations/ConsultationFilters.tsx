@@ -28,6 +28,7 @@ export const ConsultationFilters = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           disabled={disabled}
+          aria-label="بحث في الاستشارات"
         />
       </div>
       

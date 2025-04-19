@@ -69,6 +69,7 @@ export const AdminConsultations = () => {
           className="flex items-center" 
           onClick={handleRefresh}
           disabled={refreshing || isProcessing}
+          aria-label="تحديث قائمة الاستشارات"
         >
           <RefreshCw className={`ml-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           تحديث

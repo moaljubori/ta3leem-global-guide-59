@@ -36,8 +36,17 @@ import AdminSettings from "./pages/AdminSettings";
 import AdminProfile from "./pages/AdminProfile";
 import PageEditor from "./pages/PageEditor";
 import AdminAdvertisements from "./pages/AdminAdvertisements";
+import AdminMedia from "./pages/AdminMedia";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -65,6 +74,7 @@ const App = () => (
           <Route path="/admin/blog" element={<AdminBlog />} />
           <Route path="/admin/consultations" element={<AdminConsultations />} />
           <Route path="/admin/seo" element={<AdminSEO />} />
+          <Route path="/admin/media" element={<AdminMedia />} />
           
           {/* Admin Routes */}
           <Route path="/admin/statistics" element={<AdminStatistics />} />
