@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { pageSectionContents } from "../data/pageContents";
+import { pageSectionContents } from "../data/content/index";
 
 export const usePageContent = (pageId?: string, sectionId?: string) => {
   const [content, setContent] = useState<string>("");
