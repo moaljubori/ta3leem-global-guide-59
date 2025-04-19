@@ -33,8 +33,6 @@ CREATE TABLE pages (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_page_id (page_id),
-    INDEX idx_url (url),
-    INDEX idx_is_published (is_published),
     INDEX idx_is_draft (is_draft),
     INDEX idx_version(version)
 );
@@ -44,10 +42,13 @@ CREATE TABLE pages (
 CREATE TABLE page_versions (
     page_version_id INT AUTO_INCREMENT PRIMARY KEY,
     page_id INT NOT NULL,
-    INDEX idx_url (url),
-    INDEX idx_is_published (is_published)
+    
+    FOREIGN KEY (page_id) REFERENCES pages(page_id) ON DELETE CASCADE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Change section_version_id to page_version_id
 -- Table: sections
 -- Represents the sections within a page.
 -- Stores the content and type of each section.
@@ -63,8 +64,8 @@ CREATE TABLE sections (
     is_draft BOOLEAN DEFAULT TRUE, -- Indicates if this is a draft version
      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,    
-    INDEX idx_page_id (page_id),
     INDEX idx_type (type),
+    FOREIGN KEY (page_version_id) REFERENCES page_versions(page_version_id) ON DELETE CASCADE,
     INDEX idx_order_number (order_number)
 );
 
@@ -93,6 +94,7 @@ CREATE TABLE media_files_versions (
     INDEX idx_upload_date (upload_date)
 );
 
+-- Add section_id index
 -- Table: section_media
 -- Join table to link media files to sections.
 -- Defines the relationship between sections and media files. 
@@ -103,10 +105,9 @@ CREATE TABLE section_media (
     PRIMARY KEY (section_version_id, file_version_id),
     FOREIGN KEY (section_version_id) REFERENCES sections(section_version_id) ON DELETE CASCADE,
     FOREIGN KEY (file_version_id) REFERENCES media_files(file_version_id) ON DELETE CASCADE,
-    FOREIGN KEY (file_id) REFERENCES media_files(file_id) ON DELETE CASCADE,
-    FOREIGN KEY (file_id) REFERENCES media_files(file_id) ON DELETE CASCADE,
-    INDEX idx_section_id (section_id),
-    INDEX idx_file_id (file_id)
+    INDEX idx_section_version_id (section_version_id),
+    INDEX idx_file_version_id (file_version_id)
+    
 );
 
 -- Table: api_endpoints
@@ -156,8 +157,8 @@ CREATE TABLE blog_posts (
     is_published BOOLEAN DEFAULT FALSE,
     is_draft BOOLEAN DEFAULT TRUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (page_id) REFERENCES pages(page_id) ON DELETE CASCADE,
-    FOREIGN KEY (image_id) REFERENCES media_files(file_id) ON DELETE SET NULL,
+    FOREIGN KEY (page_version_id) REFERENCES page_versions(page_version_id) ON DELETE CASCADE,
+    FOREIGN KEY (image_version_id) REFERENCES media_files(file_version_id) ON DELETE SET NULL,
     FOREIGN KEY (author_id) REFERENCES admin_users(user_id) ON DELETE SET NULL,
     INDEX idx_page_id (page_id),
     INDEX idx_publish_date (publish_date)
@@ -168,6 +169,8 @@ CREATE TABLE blog_posts (
 CREATE TABLE blog_posts_versions (
     post_version_id INT AUTO_INCREMENT PRIMARY KEY,
     post_id INT NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES blog_posts(post_id) ON DELETE CASCADE,
+
     page_version_id INT UNIQUE NOT NULL,
 );
 
