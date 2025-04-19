@@ -19,11 +19,9 @@ import Services from "./pages/Services";
 // Admin Routes
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminPages from "./pages/AdminPages";
 import AdminBlog from "./pages/AdminBlog";
 import AdminConsultations from "./pages/AdminConsultations";
 import AdminSEO from "./pages/AdminSEO";
-import AdminContent from "./pages/AdminContent";
 import AdminMedia from "./pages/AdminMedia";
 
 // Create placeholder components for missing admin pages
@@ -35,8 +33,9 @@ import AdminEmail from "./pages/AdminEmail";
 import AdminCustomCode from "./pages/AdminCustomCode";
 import AdminSettings from "./pages/AdminSettings";
 import AdminProfile from "./pages/AdminProfile";
-import PageEditor from "./pages/PageEditor";
 import AdminAdvertisements from "./pages/AdminAdvertisements";
+import AdminSitePages from "./pages/AdminSitePages";
+import PageBuilderEditor from "./pages/PageBuilderEditor";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,18 +69,15 @@ const App = () => (
           {/* Admin Routes */}
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/pages" element={<AdminPages />} />
           <Route path="/admin/blog" element={<AdminBlog />} />
           <Route path="/admin/consultations" element={<AdminConsultations />} />
           <Route path="/admin/seo" element={<AdminSEO />} />
           <Route path="/admin/media" element={<AdminMedia />} />
           
-          {/* Admin Content Routes */}
-          <Route path="/admin/content" element={<AdminContent />} />
-          <Route path="/admin/content/text" element={<AdminContent />} />
-          <Route path="/admin/content/buttons" element={<AdminContent />} />
-          <Route path="/admin/content/icons" element={<AdminContent />} />
-          <Route path="/admin/content/colors" element={<AdminContent />} />
+          {/* Site Pages Management */}
+          <Route path="/admin/site-pages" element={<AdminSitePages />} />
+          <Route path="/admin/site-pages/:pageId" element={<PageBuilderEditor />} />
+          <Route path="/admin/site-pages/:pageId/:sectionId" element={<PageBuilderEditor />} />
           
           {/* Other Admin Routes */}
           <Route path="/admin/statistics" element={<AdminStatistics />} />
@@ -92,10 +88,6 @@ const App = () => (
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/profile" element={<AdminProfile />} />
           <Route path="/admin/advertisements" element={<AdminAdvertisements />} />
-          
-          {/* Page Editor Routes */}
-          <Route path="/admin/pages/:pageId" element={<PageEditor />} />
-          <Route path="/admin/pages/:pageId/:sectionId" element={<PageEditor />} />
           
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
