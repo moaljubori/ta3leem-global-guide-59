@@ -5,72 +5,89 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// Placeholder for content subsections
-const ContentText = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>إدارة النصوص</CardTitle>
-      <CardDescription>قم بتعديل نصوص الموقع من هنا</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <p>محتوى صفحة النصوص سيظهر هنا</p>
-    </CardContent>
-  </Card>
-);
+// Content sections mapping
+const contentSections = {
+  "text": {
+    title: "إدارة النصوص",
+    description: "قم بتعديل نصوص الموقع من هنا",
+    subsections: [
+      { id: "hero", title: "القسم الرئيسي" },
+      { id: "about", title: "من نحن" },
+      { id: "services", title: "خدماتنا" },
+      { id: "testimonials", title: "آراء العملاء" },
+      { id: "contact", title: "تواصل معنا" },
+      { id: "blog", title: "المدونة" },
+      { id: "countries", title: "الدول" },
+      { id: "privacy", title: "سياسة الخصوصية" },
+      { id: "terms", title: "الشروط والأحكام" }
+    ]
+  },
+  "buttons": {
+    title: "الأزرار والروابط",
+    description: "قم بتعديل أزرار وروابط الموقع من هنا",
+    subsections: [
+      { id: "navigation", title: "روابط التنقل" },
+      { id: "cta", title: "أزرار الدعوة للعمل" },
+      { id: "social", title: "روابط التواصل الاجتماعي" }
+    ]
+  },
+  "icons": {
+    title: "الأيقونات",
+    description: "قم بتعديل أيقونات الموقع من هنا",
+    subsections: [
+      { id: "features", title: "أيقونات الميزات" },
+      { id: "services", title: "أيقونات الخدمات" },
+      { id: "social", title: "أيقونات التواصل الاجتماعي" }
+    ]
+  },
+  "colors": {
+    title: "ألوان الموقع",
+    description: "قم بتعديل ألوان الموقع من هنا",
+    subsections: [
+      { id: "primary", title: "الألوان الرئيسية" },
+      { id: "secondary", title: "الألوان الثانوية" },
+      { id: "accent", title: "ألوان التمييز" }
+    ]
+  }
+};
 
-const ContentButtons = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>الأزرار والروابط</CardTitle>
-      <CardDescription>قم بتعديل أزرار وروابط الموقع من هنا</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <p>محتوى صفحة الأزرار والروابط سيظهر هنا</p>
-    </CardContent>
-  </Card>
-);
-
-const ContentIcons = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>الأيقونات</CardTitle>
-      <CardDescription>قم بتعديل أيقونات الموقع من هنا</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <p>محتوى صفحة الأيقونات سيظهر هنا</p>
-    </CardContent>
-  </Card>
-);
-
-const ContentColors = () => (
-  <Card>
-    <CardHeader>
-      <CardTitle>ألوان الموقع</CardTitle>
-      <CardDescription>قم بتعديل ألوان الموقع من هنا</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <p>محتوى صفحة ألوان الموقع سيظهر هنا</p>
-    </CardContent>
-  </Card>
-);
+const ContentSection = ({ section }: { section: string }) => {
+  const sectionData = contentSections[section as keyof typeof contentSections];
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{sectionData.title}</CardTitle>
+        <CardDescription>{sectionData.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          {sectionData.subsections.map((subsection) => (
+            <Card key={subsection.id} className="p-4">
+              <h3 className="text-lg font-semibold mb-2">{subsection.title}</h3>
+              <p className="text-sm text-gray-500">انقر للتعديل</p>
+            </Card>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const AdminContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Extract the active tab from the URL path
   const getActiveTab = () => {
     if (location.pathname === "/admin/content") return "text";
     const path = location.pathname.split("/");
     return path[path.length - 1];
   };
 
-  // Handle tab changes
   const handleTabChange = (value: string) => {
     navigate(`/admin/content/${value}`);
   };
   
-  // Redirect to text page if path is exactly /admin/content
   useEffect(() => {
     if (location.pathname === "/admin/content") {
       navigate("/admin/content/text", { replace: true });
@@ -90,21 +107,11 @@ const AdminContent = () => {
             <TabsTrigger value="colors">الألوان</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="text">
-            <ContentText />
-          </TabsContent>
-          
-          <TabsContent value="buttons">
-            <ContentButtons />
-          </TabsContent>
-          
-          <TabsContent value="icons">
-            <ContentIcons />
-          </TabsContent>
-          
-          <TabsContent value="colors">
-            <ContentColors />
-          </TabsContent>
+          {Object.keys(contentSections).map((section) => (
+            <TabsContent key={section} value={section}>
+              <ContentSection section={section} />
+            </TabsContent>
+          ))}
         </Tabs>
       </div>
     </AdminLayout>

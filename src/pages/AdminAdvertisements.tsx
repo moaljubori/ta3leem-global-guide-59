@@ -119,9 +119,15 @@ const AdminAdvertisements = () => {
       return;
     }
 
+    const formattedAd = {
+      ...currentAd,
+      startDate: new Date(currentAd.startDate).toISOString(),
+      endDate: currentAd.endDate ? new Date(currentAd.endDate).toISOString() : null
+    };
+
     if (isCreateDialogOpen) {
       const newId = String(Math.max(...ads.map(ad => parseInt(ad.id)), 0) + 1);
-      const newAd = { ...currentAd, id: newId };
+      const newAd = { ...formattedAd, id: newId };
       setAds([...ads, newAd]);
       
       toast({
@@ -130,7 +136,7 @@ const AdminAdvertisements = () => {
       });
       setIsCreateDialogOpen(false);
     } else if (isEditDialogOpen && currentAd.id) {
-      setAds(ads.map(ad => ad.id === currentAd.id ? currentAd : ad));
+      setAds(ads.map(ad => ad.id === currentAd.id ? formattedAd : ad));
       
       toast({
         title: "تم التحديث بنجاح",
@@ -475,8 +481,13 @@ const AdminAdvertisements = () => {
               id="isActive" 
               checked={currentAd.isActive} 
               onCheckedChange={(checked) => setCurrentAd({...currentAd, isActive: checked})} 
+              className="data-[state=checked]:bg-green-600"
             />
-            <Label htmlFor="isActive" className="cursor-pointer">تفعيل الإعلان فور إضافته</Label>
+            <Label htmlFor="isActive" className="cursor-pointer flex items-center">
+              <span className={currentAd.isActive ? "text-green-600" : "text-gray-500"}>
+                {currentAd.isActive ? "الإعلان نشط" : "تفعيل الإعلان فور إضافته"}
+              </span>
+            </Label>
           </div>
         </div>
       </div>
