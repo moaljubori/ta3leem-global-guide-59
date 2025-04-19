@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Advertisement } from "@/components/admin/advertisements/types";
 import { AdvertisementForm } from "@/components/admin/advertisements/AdvertisementForm";
 import { AdvertisementsTable } from "@/components/admin/advertisements/AdvertisementsTable";
