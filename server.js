@@ -51,6 +51,12 @@ try {
       queueLimit: 0
     };
   }
+  
+  console.log('Database configuration loaded:', {
+    host: dbConfig.host,
+    database: dbConfig.database,
+    port: dbConfig.port
+  });
 } catch (error) {
   console.error('Failed to load database configuration:', error);
   process.exit(1);
@@ -59,8 +65,8 @@ try {
 // Database connection pool
 const pool = mysql.createPool({
   host: dbConfig.host,
-  user: dbConfig.username,
-  password: dbConfig.password,
+  user: dbConfig.username || 'dbuser',  // Fallback if username is undefined
+  password: dbConfig.password || '',    // Fallback if password is undefined
   database: dbConfig.database,
   port: dbConfig.port,
   waitForConnections: true,
@@ -82,10 +88,8 @@ async function testDbConnection() {
 }
 
 // Set up middleware
-// Configure CORS to allow requests from any origin during development
-// In production, you should restrict this to your specific domains
 app.use(cors({
-  origin: '*', // Allow all origins
+  origin: '*', // Allow all origins in development
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -97,7 +101,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Static files for client (React build)
-// For production, serve the React build files
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Make db pool available to route handlers
@@ -123,20 +126,35 @@ if (!fs.existsSync(uploadsDir)){
   console.log('Created uploads directory');
 }
 
-// API status endpoint
+// API status endpoint - useful for debugging
 app.get('/api/status', (req, res) => {
   res.json({
     status: 'online',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
     database: dbConfig.database,
-    host: dbConfig.host
+    host: dbConfig.host,
+    nodeEnv: process.env.NODE_ENV,
   });
+});
+
+// Debug endpoint to check database tables
+app.get('/api/debug/tables', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ message: 'Debug endpoints are disabled in production' });
+  }
+  
+  try {
+    const [tables] = await pool.query('SHOW TABLES');
+    res.json({ tables });
+  } catch (error) {
+    res.status(500).json({ error: String(error) });
+  }
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Server error:', err.stack);
   res.status(500).json({
     error: true,
     message: 'Internal Server Error',
@@ -151,18 +169,25 @@ app.get('*', (req, res) => {
 
 // Start server
 async function startServer() {
-  const dbConnected = await testDbConnection();
+  let dbConnected = false;
   
-  if (!dbConnected && process.env.NODE_ENV === 'production') {
-    console.warn('Warning: Starting server despite database connection failure');
-  } else if (!dbConnected && process.env.NODE_ENV !== 'production') {
-    console.error('Failed to connect to database in development mode, exiting');
-    process.exit(1);
+  try {
+    dbConnected = await testDbConnection();
+  } catch (err) {
+    console.error('Database connection test failed:', err);
+  }
+  
+  // In production, warn but continue even if DB connection fails initially
+  if (!dbConnected) {
+    console.warn('⚠️ WARNING: Database connection failed, but continuing server startup');
+    console.warn('Please check your database configuration and ensure your database is running');
   }
   
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`API accessible at http://localhost:${PORT}/api`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Database connection: ${dbConnected ? 'Successful' : 'Failed'}`);
   });
 }
 

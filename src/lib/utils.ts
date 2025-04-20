@@ -1,3 +1,4 @@
+
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -15,24 +16,29 @@ export const apiClient = {
   // Auth endpoints
   auth: {
     login: async (username: string, password: string) => {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Login failed');
+        }
+        
+        const data = await response.json();
+        // Store token in localStorage
+        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('admin_authenticated', 'true');
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+        
+        return data;
+      } catch (error) {
+        console.error('Login error:', error);
+        throw error;
       }
-      
-      const data = await response.json();
-      // Store token in localStorage
-      localStorage.setItem('admin_token', data.token);
-      localStorage.setItem('admin_authenticated', 'true');
-      localStorage.setItem('admin_user', JSON.stringify(data.user));
-      
-      return data;
     },
     
     logout: () => {
@@ -62,7 +68,13 @@ export const apiClient = {
     };
     
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      // Add cache-busting parameter to GET requests to prevent caching issues
+      const cacheBuster = endpoint.includes('?') ? `&_cb=${Date.now()}` : `?_cb=${Date.now()}`;
+      const url = `${API_BASE_URL}${endpoint}${endpoint.toLowerCase().includes('status') ? '' : cacheBuster}`;
+      
+      console.log(`API Request: ${url}`);
+      
+      const response = await fetch(url, {
         ...options,
         headers
       });
@@ -74,12 +86,26 @@ export const apiClient = {
         throw new Error('Authentication required');
       }
       
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(error.message || `API request failed with status ${response.status}`);
+      // Check if we can parse JSON response
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || `API request failed with status ${response.status}`);
+        }
+        
+        return data;
+      } else {
+        // Handle non-JSON responses
+        if (!response.ok) {
+          const text = await response.text();
+          console.error('Non-JSON error response:', text);
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        
+        return { success: true, message: 'Operation completed successfully' };
       }
-      
-      return response.json();
     } catch (error) {
       console.error('API Request Error:', error);
       throw error;
@@ -96,18 +122,23 @@ export const apiClient = {
       formData.append('name', name);
     }
     
-    const response = await fetch(`${API_BASE_URL}/media/upload`, {
-      method: 'POST',
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      body: formData
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'File upload failed');
+    try {
+      const response = await fetch(`${API_BASE_URL}/media/upload`, {
+        method: 'POST',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        body: formData
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'File upload failed');
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
     }
-    
-    return response.json();
   },
   
   // Blog endpoints

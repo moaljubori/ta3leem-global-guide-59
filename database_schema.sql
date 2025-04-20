@@ -1,4 +1,3 @@
-
 -- Database: website_db
 
 -- Table: admin_users
@@ -32,6 +31,7 @@ CREATE TABLE IF NOT EXISTS pages (
     meta_keywords TEXT,
     is_published BOOLEAN DEFAULT FALSE,
     is_draft BOOLEAN DEFAULT TRUE,
+    version INT DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,    
     INDEX idx_is_published (is_published),
@@ -55,8 +55,8 @@ CREATE TABLE IF NOT EXISTS page_versions (
 -- Stores the content and type of each section.
 -- Supports draft and published versions.
 CREATE TABLE IF NOT EXISTS sections (
-    section_id INT AUTO_INCREMENT PRIMARY KEY,
-    section_version_id INT NOT NULL,
+    section_id VARCHAR(36),
+    section_version_id INT AUTO_INCREMENT PRIMARY KEY,
     page_version_id INT NOT NULL,
     type VARCHAR(255) NOT NULL, -- e.g., 'text', 'image', 'video'
     name VARCHAR(255),
@@ -75,8 +75,8 @@ CREATE TABLE IF NOT EXISTS sections (
 -- Stores information about uploaded media files.
 -- Includes details like file name, path, and upload date.
 CREATE TABLE IF NOT EXISTS media_files (
-    file_id VARCHAR(36) PRIMARY KEY,
-    file_version_id INT AUTO_INCREMENT UNIQUE,
+    file_id VARCHAR(36),
+    file_version_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     path VARCHAR(255) NOT NULL,
     upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,

@@ -9,5 +9,5 @@
   "connectionLimit": 10,
   "waitForConnections": true,
   "queueLimit": 0,
-  "comments": "Replace these values with your actual database credentials. For production, use environment variables or a secure configuration system."
+  "comments": "Replace these values with your actual database credentials. For production, use environment variables for sensitive data."
 }

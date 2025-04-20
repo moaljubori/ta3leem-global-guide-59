@@ -9,17 +9,24 @@ import { toast } from "sonner";
 const BlogPreviewSection = () => {
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBlogPosts = async () => {
       try {
         setLoading(true);
+        setError(null);
+        console.log('Fetching blog posts...');
+        
         const response = await apiClient.blog.getAllPosts(true);
+        console.log('Blog posts fetched:', response);
+        
         const posts = response.posts || [];
         // Take only first 3 posts for preview
         setBlogPosts(posts.slice(0, 3));
       } catch (error) {
         console.error("Error fetching blog posts:", error);
+        setError('Failed to load blog posts');
         toast.error("Failed to load blog posts. Showing sample content instead.");
         // Fallback to static data if API fails
         setBlogPosts([
