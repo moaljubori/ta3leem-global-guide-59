@@ -1,4 +1,3 @@
-
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -102,6 +101,37 @@ export const apiClient = {
     }
     
     return response.json();
+  },
+  
+  // Blog endpoints
+  blog: {
+    getAllPosts: async (publishedOnly = true) => {
+      return apiClient.request(`/blog?published=${publishedOnly}`);
+    },
+    
+    getPostById: async (postId: string | number) => {
+      return apiClient.request(`/blog/${postId}`);
+    },
+    
+    createPost: async (postData: any) => {
+      return apiClient.request('/blog', {
+        method: 'POST',
+        body: JSON.stringify(postData)
+      });
+    },
+    
+    updatePost: async (postId: string | number, postData: any) => {
+      return apiClient.request(`/blog/${postId}`, {
+        method: 'PUT',
+        body: JSON.stringify(postData)
+      });
+    },
+    
+    deletePost: async (postId: string | number) => {
+      return apiClient.request(`/blog/${postId}`, {
+        method: 'DELETE'
+      });
+    }
   }
 };
 

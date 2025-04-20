@@ -5,6 +5,7 @@ import { ArrowRight, Calendar, User, Tag, Clock, Share2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { apiClient } from "@/lib/utils";
 
 const BlogPost = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,122 +13,62 @@ const BlogPost = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Simulate loading the blog post
-    const timer = setTimeout(() => {
-      // Find the post with the matching ID
-      const foundPost = blogPosts.find(post => post.id === parseInt(id || '0'));
-      setPost(foundPost || null);
-      setLoading(false);
-    }, 500);
+    const fetchBlogPost = async () => {
+      try {
+        setLoading(true);
+        
+        if (id) {
+          const response = await apiClient.request(`/blog/${id}`);
+          setPost(response.post || null);
+        }
+      } catch (error) {
+        console.error("Error fetching blog post:", error);
+        // Fall back to static data if API fails
+        const blogPosts = [
+          {
+            id: 1,
+            title: "أفضل 10 جامعات في كندا للطلاب الدوليين",
+            excerpt: "تعرف على أفضل الجامعات الكندية التي توفر برامج متميزة وبيئة داعمة للطلاب الدوليين...",
+            content: `
+              <p>تتمتع كندا بسمعة عالمية ممتازة في مجال التعليم العالي، حيث تتوفر فيها مؤسسات تعليمية ذات مستوى عالمي توفر بيئة تعليمية متميزة للطلاب الدوليين.</p>
+              
+              <h2>لماذا الدراسة في كندا؟</h2>
+              <p>هناك العديد من الأسباب التي تجعل كندا وجهة مثالية للدراسة، منها:</p>
+              <ul>
+                <li>جودة التعليم العالية</li>
+                <li>الأمان والاستقرار</li>
+                <li>التنوع الثقافي والترحيب بالطلاب الدوليين</li>
+                <li>تكاليف معيشية أقل مقارنة ببعض الدول الأخرى</li>
+                <li>فرص عمل بعد التخرج</li>
+              </ul>
+            `,
+            category: "كندا",
+            date: "21 مارس 2025",
+            author: "محمد أحمد",
+            readTime: "7 دقائق",
+            image: "https://images.unsplash.com/photo-1612011213372-89a31f00a0e2?ixlib=rb-4.0.3",
+            relatedPosts: [
+              {
+                id: 2,
+                title: "كيف تحصل على منحة دراسية في الولايات المتحدة",
+                date: "15 مارس 2025",
+                image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3",
+              }
+            ]
+          },
+          // ... you could add more fallback posts here
+        ];
+        
+        // Find the post with the matching ID
+        const foundPost = blogPosts.find(post => post.id === parseInt(id || '0'));
+        setPost(foundPost || null);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
+    fetchBlogPost();
   }, [id]);
-
-  // Mock blog posts data
-  const blogPosts = [
-    {
-      id: 1,
-      title: "أفضل 10 جامعات في كندا للطلاب الدوليين",
-      excerpt: "تعرف على أفضل الجامعات الكندية التي توفر برامج متميزة وبيئة داعمة للطلاب الدوليين...",
-      content: `
-        <p>تتمتع كندا بسمعة عالمية ممتازة في مجال التعليم العالي، حيث تتوفر فيها مؤسسات تعليمية ذات مستوى عالمي توفر بيئة تعليمية متميزة للطلاب الدوليين.</p>
-        
-        <h2>لماذا الدراسة في كندا؟</h2>
-        <p>هناك العديد من الأسباب التي تجعل كندا وجهة مثالية للدراسة، منها:</p>
-        <ul>
-          <li>جودة التعليم العالية</li>
-          <li>الأمان والاستقرار</li>
-          <li>التنوع الثقافي والترحيب بالطلاب الدوليين</li>
-          <li>تكاليف معيشية أقل مقارنة ببعض الدول الأخرى</li>
-          <li>فرص عمل بعد التخرج</li>
-        </ul>
-        
-        <h2>أفضل الجامعات الكندية للطلاب الدوليين</h2>
-        <p>فيما يلي قائمة بأفضل 10 جامعات في كندا للطلاب الدوليين:</p>
-        
-        <h3>1. جامعة تورونتو</h3>
-        <p>تحتل جامعة تورونتو المرتبة الأولى في كندا وواحدة من أفضل الجامعات على مستوى العالم. توفر الجامعة بيئة أكاديمية متميزة وبرامج متنوعة في مختلف المجالات.</p>
-        
-        <h3>2. جامعة كولومبيا البريطانية</h3>
-        <p>تقع في فانكوفر وتتميز بموقعها الجميل المطل على المحيط والجبال، وتوفر برامج قوية في العلوم والهندسة والأعمال.</p>
-        
-        <h3>3. جامعة ماكجيل</h3>
-        <p>تقع في مونتريال، وتعتبر واحدة من أقدم وأعرق الجامعات في كندا، وتتميز ببرامجها القوية في الطب والقانون.</p>
-        
-        <h3>4. جامعة واترلو</h3>
-        <p>معروفة ببرامجها المتميزة في الهندسة وعلوم الكمبيوتر، وتوفر برامج تعاونية تجمع بين الدراسة والتدريب العملي.</p>
-        
-        <h3>5. جامعة مكماستر</h3>
-        <p>تتميز ببرامجها في العلوم الصحية والطب، وتتبنى أساليب تعليمية مبتكرة.</p>
-      `,
-      category: "كندا",
-      date: "21 مارس 2025",
-      author: "محمد أحمد",
-      readTime: "7 دقائق",
-      image: "https://images.unsplash.com/photo-1612011213372-89a31f00a0e2?ixlib=rb-4.0.3",
-      relatedPosts: [2, 4, 6]
-    },
-    {
-      id: 2,
-      title: "كيف تحصل على منحة دراسية في الولايات المتحدة",
-      excerpt: "نصائح عملية وخطوات مفصلة للتقدم بنجاح للمنح الدراسية في الجامعات الأمريكية...",
-      content: "محتوى المقال الكامل هنا...",
-      category: "المنح الدراسية",
-      date: "15 مارس 2025",
-      author: "سارة خالد",
-      readTime: "8 دقائق",
-      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3",
-      relatedPosts: [1, 3, 5]
-    },
-    {
-      id: 3,
-      title: "دليل شامل للتأشيرة الدراسية البريطانية",
-      excerpt: "كل ما تحتاج معرفته عن متطلبات وإجراءات الحصول على تأشيرة الدراسة في المملكة المتحدة...",
-      content: "محتوى المقال الكامل هنا...",
-      category: "التأشيرات",
-      date: "8 مارس 2025",
-      author: "فيصل العمري",
-      readTime: "6 دقائق",
-      image: "https://images.unsplash.com/photo-1526656892012-7b336603ed46?ixlib=rb-4.0.3",
-      relatedPosts: [2, 5, 6]
-    },
-    {
-      id: 4,
-      title: "نصائح للتكيف مع الحياة الدراسية في كندا",
-      excerpt: "إرشادات عملية للطلاب الجدد للتكيف مع نمط الحياة والدراسة في الجامعات الكندية...",
-      content: "محتوى المقال الكامل هنا...",
-      category: "نصائح للطلاب",
-      date: "28 فبراير 2025",
-      author: "نور الدين",
-      readTime: "5 دقائق",
-      image: "https://images.unsplash.com/photo-1520620162443-32c5e9b369b1?ixlib=rb-4.0.3",
-      relatedPosts: [1, 3, 5]
-    },
-    {
-      id: 5,
-      title: "مقارنة بين أنظمة التعليم في بريطانيا وأمريكا",
-      excerpt: "تحليل مفصل للفروقات بين نظامي التعليم في المملكة المتحدة والولايات المتحدة...",
-      content: "محتوى المقال الكامل هنا...",
-      category: "الولايات المتحدة",
-      date: "20 فبراير 2025",
-      author: "ليلى محمود",
-      readTime: "9 دقائق",
-      image: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?ixlib=rb-4.0.3",
-      relatedPosts: [2, 3, 6]
-    },
-    {
-      id: 6,
-      title: "أفضل مدن المملكة المتحدة للطلاب الدوليين",
-      excerpt: "استعراض لأفضل المدن البريطانية من حيث الجامعات وتكاليف المعيشة وجودة الحياة...",
-      content: "محتوى المقال الكامل هنا...",
-      category: "المملكة المتحدة",
-      date: "10 فبراير 2025",
-      author: "خالد العبدالله",
-      readTime: "7 دقائق",
-      image: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?ixlib=rb-4.0.3",
-      relatedPosts: [1, 3, 5]
-    },
-  ];
 
   if (loading) {
     return (
@@ -161,11 +102,6 @@ const BlogPost = () => {
     );
   }
 
-  // Find related posts
-  const relatedPosts = post.relatedPosts
-    ? post.relatedPosts.map((relatedId: number) => blogPosts.find(p => p.id === relatedId))
-    : [];
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -174,9 +110,12 @@ const BlogPost = () => {
         <div className="relative h-96">
           <div className="absolute inset-0 bg-black/50 z-10"></div>
           <img 
-            src={post.image} 
+            src={post.image.startsWith('http') ? post.image : `/uploads/${post.image}`}
             alt={post.title} 
             className="w-full h-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1612011213372-89a31f00a0e2?ixlib=rb-4.0.3";
+            }}
           />
           <div className="container mx-auto px-4 absolute inset-0 z-20 flex items-center">
             <div className="text-white max-w-3xl">
@@ -231,7 +170,7 @@ const BlogPost = () => {
               <div className="bg-gray-50 rounded-lg p-6">
                 <div className="flex items-center mb-4">
                   <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                    {post.author.split(" ").map((n: string) => n[0]).join("")}
+                    {post.author?.split(" ").map((n: string) => n[0]).join("")}
                   </div>
                   <div className="mr-4">
                     <h3 className="font-bold text-lg">{post.author}</h3>
@@ -244,11 +183,11 @@ const BlogPost = () => {
               </div>
               
               {/* Related Posts */}
-              {relatedPosts.length > 0 && (
+              {post.relatedPosts && post.relatedPosts.length > 0 && (
                 <div>
                   <h3 className="text-xl font-bold mb-4">مقالات ذات صلة</h3>
                   <div className="space-y-4">
-                    {relatedPosts.map((relatedPost: any) => (
+                    {post.relatedPosts.map((relatedPost: any) => (
                       relatedPost && (
                         <Link 
                           key={relatedPost.id} 
@@ -257,9 +196,12 @@ const BlogPost = () => {
                         >
                           <div className="w-20 h-20 bg-gray-200 rounded overflow-hidden flex-shrink-0">
                             <img 
-                              src={relatedPost.image} 
+                              src={relatedPost.image.startsWith('http') ? relatedPost.image : `/uploads/${relatedPost.image}`}
                               alt={relatedPost.title} 
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3";
+                              }}
                             />
                           </div>
                           <div>

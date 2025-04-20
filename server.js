@@ -15,6 +15,7 @@ const usersRoutes = require('./server/routes/users');
 const advertisementsRoutes = require('./server/routes/advertisements');
 const consultationsRoutes = require('./server/routes/consultations');
 const settingsRoutes = require('./server/routes/settings');
+const blogRoutes = require('./server/routes/blog'); // Add blog routes import
 
 // Load database configuration
 const dbConfigPath = path.join(__dirname, 'database.config.json');
@@ -70,6 +71,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/advertisements', advertisementsRoutes);
 app.use('/api/consultations', consultationsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/blog', blogRoutes); // Add blog routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {
