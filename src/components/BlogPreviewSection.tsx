@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/utils";
+import { toast } from "sonner";
 
 const BlogPreviewSection = () => {
   const [blogPosts, setBlogPosts] = useState<any[]>([]);
@@ -13,12 +14,13 @@ const BlogPreviewSection = () => {
     const fetchBlogPosts = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.request('/blog?published=true');
+        const response = await apiClient.blog.getAllPosts(true);
         const posts = response.posts || [];
         // Take only first 3 posts for preview
         setBlogPosts(posts.slice(0, 3));
       } catch (error) {
         console.error("Error fetching blog posts:", error);
+        toast.error("Failed to load blog posts. Showing sample content instead.");
         // Fallback to static data if API fails
         setBlogPosts([
           {
@@ -96,42 +98,58 @@ const BlogPreviewSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {blogPosts.map((post) => (
-            <Link 
-              to={`/blog/${post.id}`} 
-              key={post.id}
-              className="group bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow"
-            >
-              <div className="h-48 overflow-hidden">
-                <img
-                  src={post.image.startsWith('http') ? post.image : `/uploads/${post.image}`}
-                  alt={post.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1612011213372-89a31f00a0e2?ixlib=rb-4.0.3";
-                  }}
-                />
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                    {post.category}
-                  </span>
-                  <span className="text-sm text-gray-500">{post.date}</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
-                  {post.title}
-                </h3>
-                <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                <div className="flex items-center text-blue-600 font-medium">
-                  <span>اقرأ المزيد</span>
-                  <ArrowLeft className="w-4 h-4 mr-2 group-hover:mr-1 transition-all" />
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow">
+                <div className="h-48 bg-gray-200 animate-pulse"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                  <div className="h-6 bg-gray-200 rounded w-full animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {blogPosts.map((post) => (
+              <Link 
+                to={`/blog/${post.id}`} 
+                key={post.id}
+                className="group bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition-shadow"
+              >
+                <div className="h-48 overflow-hidden">
+                  <img
+                    src={post.image && post.image.startsWith('http') ? post.image : `/uploads/${post.image}`}
+                    alt={post.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1612011213372-89a31f00a0e2?ixlib=rb-4.0.3";
+                    }}
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                      {post.category}
+                    </span>
+                    <span className="text-sm text-gray-500">{post.date}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
+                    {post.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                  <div className="flex items-center text-blue-600 font-medium">
+                    <span>اقرأ المزيد</span>
+                    <ArrowLeft className="w-4 h-4 mr-2 group-hover:mr-1 transition-all" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
         <div className="text-center mt-12">
           <Link to="/blog">

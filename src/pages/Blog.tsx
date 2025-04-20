@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/utils";
+import { toast } from "sonner";
 
 const Blog = () => {
   const [categories, setCategories] = useState<string[]>([]);
@@ -17,12 +18,12 @@ const Blog = () => {
     const fetchBlogPosts = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.request('/blog?published=true');
+        const response = await apiClient.blog.getAllPosts(true);
         setBlogPosts(response.posts || []);
         setCategories(response.categories || ["جميع المقالات"]);
       } catch (error) {
         console.error("Error fetching blog posts:", error);
-        // Fallback to static data if API fails
+        toast.error("Failed to load blog data. Showing sample content instead.");
         setBlogPosts([
           {
             id: 1,
@@ -67,12 +68,13 @@ const Blog = () => {
           {
             id: 6,
             title: "أفضل مدن المملكة المتحدة للطلاب الدوليين",
-            excerpt: "استعراض لأفضل المدن البريطانية من حيث الجامعات وتكاليف المعيشة وجودة الحياة...",
+            excerpt: "استعراض لأفضل المدن ا�� Brittانية من حيث الجامعات وتكاليف المعيشة وجودة الحياة...",
             category: "المملكة المتحدة",
             date: "10 فبراير 2025",
             image: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?ixlib=rb-4.0.3",
           },
         ]);
+        setCategories(["جميع المقالات", "كندا", "المنح الدراسية", "التأشيرات", "نصائح للطلاب", "الولايات المتحدة", "المملكة المتحدة"]);
       } finally {
         setLoading(false);
       }
@@ -81,7 +83,6 @@ const Blog = () => {
     fetchBlogPosts();
   }, []);
 
-  // Filter posts by category and search query
   const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = activeCategory === "جميع المقالات" || post.category === activeCategory;
     const matchesSearch = searchQuery === "" || 
@@ -94,7 +95,6 @@ const Blog = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow">
-        {/* Hero Section */}
         <section className="bg-gradient-to-b from-blue-700 to-blue-900 text-white pt-36 pb-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
@@ -116,10 +116,8 @@ const Blog = () => {
           </div>
         </section>
 
-        {/* Blog Content */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
-            {/* Categories */}
             <div className="mb-10 overflow-x-auto">
               <div className="flex space-x-4 space-x-reverse">
                 {categories.map((category) => (
@@ -138,14 +136,12 @@ const Blog = () => {
               </div>
             </div>
 
-            {/* Loading State */}
             {loading && (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             )}
 
-            {/* No Results */}
             {!loading && filteredPosts.length === 0 && (
               <div className="text-center py-16">
                 <h3 className="text-2xl font-bold text-gray-800">لا توجد نتائج</h3>
@@ -153,7 +149,6 @@ const Blog = () => {
               </div>
             )}
 
-            {/* Blog Posts Grid */}
             {!loading && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredPosts.map((post) => (
@@ -164,7 +159,7 @@ const Blog = () => {
                   >
                     <div className="h-48 overflow-hidden">
                       <img
-                        src={post.image.startsWith('http') ? post.image : `/uploads/${post.image}`}
+                        src={post.image && post.image.startsWith('http') ? post.image : `/uploads/${post.image}`}
                         alt={post.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
@@ -190,7 +185,6 @@ const Blog = () => {
               </div>
             )}
 
-            {/* Pagination - we'll add real pagination later */}
             {!loading && filteredPosts.length > 0 && (
               <div className="mt-12 flex justify-center">
                 <nav className="inline-flex">

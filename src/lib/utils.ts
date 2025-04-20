@@ -1,3 +1,4 @@
+
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -6,7 +7,11 @@ export function cn(...inputs: any[]) {
 }
 
 // API Client Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
+// Use window.location to determine the API base URL dynamically
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (typeof window !== 'undefined' 
+    ? `${window.location.protocol}//${window.location.hostname}:3001/api` 
+    : "http://localhost:3001/api");
 
 // Client-side API utilities
 export const apiClient = {
@@ -129,6 +134,172 @@ export const apiClient = {
     
     deletePost: async (postId: string | number) => {
       return apiClient.request(`/blog/${postId}`, {
+        method: 'DELETE'
+      });
+    }
+  },
+
+  // Pages endpoints
+  pages: {
+    getAllPages: async (publishedOnly = true) => {
+      return apiClient.request(`/pages?published=${publishedOnly}`);
+    },
+
+    getPageById: async (pageId: string | number) => {
+      return apiClient.request(`/pages/${pageId}`);
+    },
+
+    createPage: async (pageData: any) => {
+      return apiClient.request('/pages', {
+        method: 'POST',
+        body: JSON.stringify(pageData)
+      });
+    },
+
+    updatePage: async (pageId: string | number, pageData: any) => {
+      return apiClient.request(`/pages/${pageId}`, {
+        method: 'PUT',
+        body: JSON.stringify(pageData)
+      });
+    },
+
+    publishPage: async (pageId: string | number, isPublished: boolean) => {
+      return apiClient.request(`/pages/${pageId}/publish`, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_published: isPublished })
+      });
+    },
+
+    deletePage: async (pageId: string | number) => {
+      return apiClient.request(`/pages/${pageId}`, {
+        method: 'DELETE'
+      });
+    }
+  },
+
+  // Settings endpoints
+  settings: {
+    getAllSettings: async (category?: string) => {
+      const query = category ? `?category=${category}` : '';
+      return apiClient.request(`/settings${query}`);
+    },
+
+    getSetting: async (name: string) => {
+      return apiClient.request(`/settings/${name}`);
+    },
+
+    updateSettings: async (settingsData: any) => {
+      return apiClient.request('/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ settings: settingsData })
+      });
+    },
+
+    deleteSetting: async (name: string) => {
+      return apiClient.request(`/settings/${name}`, {
+        method: 'DELETE'
+      });
+    }
+  },
+
+  // Consultations endpoints
+  consultations: {
+    getAllConsultations: async (params: any = {}) => {
+      const queryParams = new URLSearchParams();
+      
+      if (params.status) queryParams.append('status', params.status);
+      if (params.page) queryParams.append('page', params.page.toString());
+      if (params.limit) queryParams.append('limit', params.limit.toString());
+      if (params.search) queryParams.append('search', params.search);
+      if (params.startDate) queryParams.append('startDate', params.startDate);
+      if (params.endDate) queryParams.append('endDate', params.endDate);
+      
+      const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
+      return apiClient.request(`/consultations${query}`);
+    },
+
+    getConsultationById: async (id: string | number) => {
+      return apiClient.request(`/consultations/${id}`);
+    },
+
+    createConsultation: async (data: any) => {
+      return apiClient.request('/consultations', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    },
+
+    updateConsultationStatus: async (id: string | number, status: string) => {
+      return apiClient.request(`/consultations/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+    },
+
+    deleteConsultation: async (id: string | number) => {
+      return apiClient.request(`/consultations/${id}`, {
+        method: 'DELETE'
+      });
+    }
+  },
+
+  // Advertisements endpoints
+  advertisements: {
+    getAllAdvertisements: async (activeOnly = false) => {
+      return apiClient.request(`/advertisements?active=${activeOnly}`);
+    },
+
+    getAdvertisementById: async (id: string | number) => {
+      return apiClient.request(`/advertisements/${id}`);
+    },
+
+    createAdvertisement: async (data: any) => {
+      return apiClient.request('/advertisements', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
+    },
+
+    updateAdvertisement: async (id: string | number, data: any) => {
+      return apiClient.request(`/advertisements/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+    },
+
+    deleteAdvertisement: async (id: string | number) => {
+      return apiClient.request(`/advertisements/${id}`, {
+        method: 'DELETE'
+      });
+    }
+  },
+
+  // Users endpoints
+  users: {
+    getAllUsers: async () => {
+      return apiClient.request('/users');
+    },
+
+    getUserById: async (id: string | number) => {
+      return apiClient.request(`/users/${id}`);
+    },
+
+    createUser: async (userData: any) => {
+      return apiClient.request('/users', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      });
+    },
+
+    updateUser: async (id: string | number, userData: any) => {
+      return apiClient.request(`/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(userData)
+      });
+    },
+
+    deleteUser: async (id: string | number) => {
+      return apiClient.request(`/users/${id}`, {
         method: 'DELETE'
       });
     }

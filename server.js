@@ -15,7 +15,7 @@ const usersRoutes = require('./server/routes/users');
 const advertisementsRoutes = require('./server/routes/advertisements');
 const consultationsRoutes = require('./server/routes/consultations');
 const settingsRoutes = require('./server/routes/settings');
-const blogRoutes = require('./server/routes/blog'); // Add blog routes import
+const blogRoutes = require('./server/routes/blog');
 
 // Load database configuration
 const dbConfigPath = path.join(__dirname, 'database.config.json');
@@ -50,12 +50,23 @@ async function testDbConnection() {
 }
 
 // Set up middleware
-app.use(cors());
+// Configure CORS to allow requests from any origin during development
+// In production, you should restrict this to your specific domains
+app.use(cors({
+  origin: '*', // Allow all origins for development
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Static files for uploaded media
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Static files for client (React build)
+// Uncomment this in production when you have a build folder
+// app.use(express.static(path.join(__dirname, 'dist')));
 
 // Make db pool available to route handlers
 app.use((req, res, next) => {
@@ -71,7 +82,23 @@ app.use('/api/users', usersRoutes);
 app.use('/api/advertisements', advertisementsRoutes);
 app.use('/api/consultations', consultationsRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/blog', blogRoutes); // Add blog routes
+app.use('/api/blog', blogRoutes);
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)){
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory');
+}
+
+// API status endpoint
+app.get('/api/status', (req, res) => {
+  res.json({
+    status: 'online',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -83,11 +110,18 @@ app.use((err, req, res, next) => {
   });
 });
 
+// For React Router (SPA) - handle any requests not matched by the above routes
+// Uncomment this in production when you have a build folder
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// });
+
 // Start server
 async function startServer() {
   await testDbConnection();
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`API accessible at http://localhost:${PORT}/api`);
   });
 }
 
