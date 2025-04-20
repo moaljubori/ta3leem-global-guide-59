@@ -1,4 +1,3 @@
-
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -9,9 +8,7 @@ export function cn(...inputs: any[]) {
 // API Client Configuration
 // Use window.location to determine the API base URL dynamically
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-  (typeof window !== 'undefined' 
-    ? `${window.location.protocol}//${window.location.hostname}:3001/api` 
-    : "http://localhost:3001/api");
+  (typeof window !== 'undefined' ? '/api' : "http://localhost:3001/api");
 
 // Client-side API utilities
 export const apiClient = {
@@ -64,24 +61,29 @@ export const apiClient = {
       ...(options.headers || {})
     };
     
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      ...options,
-      headers
-    });
-    
-    if (response.status === 401) {
-      // Token expired or invalid, logout
-      apiClient.auth.logout();
-      window.location.href = '/admin';
-      throw new Error('Authentication required');
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers
+      });
+      
+      if (response.status === 401) {
+        // Token expired or invalid, logout
+        apiClient.auth.logout();
+        window.location.href = '/admin';
+        throw new Error('Authentication required');
+      }
+      
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(error.message || `API request failed with status ${response.status}`);
+      }
+      
+      return response.json();
+    } catch (error) {
+      console.error('API Request Error:', error);
+      throw error;
     }
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'API request failed');
-    }
-    
-    return response.json();
   },
   
   // File upload helper
