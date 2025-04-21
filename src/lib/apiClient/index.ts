@@ -9,6 +9,7 @@ import { consultationsApi } from "./consultations";
 import { advertisementsApi } from "./advertisements";
 import { usersApi } from "./users";
 import { uploadFile } from "./upload";
+import { mediaApi } from "./media";
 
 export const apiClient = {
   auth: authApi,
@@ -20,4 +21,5 @@ export const apiClient = {
   advertisements: advertisementsApi,
   users: usersApi,
   uploadFile,
+  media: mediaApi
 };
