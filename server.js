@@ -97,11 +97,29 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Set proper MIME types for JavaScript modules
+app.use((req, res, next) => {
+  if (req.url.endsWith('.js')) {
+    res.setHeader('Content-Type', 'application/javascript');
+  } else if (req.url.endsWith('.mjs')) {
+    res.setHeader('Content-Type', 'application/javascript');
+  }
+  next();
+});
+
 // Static files for uploaded media
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Static files for client (React build)
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'dist'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
 
 // Make db pool available to route handlers
 app.use((req, res, next) => {
