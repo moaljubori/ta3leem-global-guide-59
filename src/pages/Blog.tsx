@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { apiClient } from "@/lib/utils";
+import { apiClient } from "@/lib/apiClient";
 import { toast } from "sonner";
 
 const Blog = () => {
