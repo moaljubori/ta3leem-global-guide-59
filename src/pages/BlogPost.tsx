@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowRight, Calendar, User, Tag, Clock, Share2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { apiClient } from "@/lib/utils";
+import { apiClient } from "@/lib/apiClient";
 
 const BlogPost = () => {
   const { id } = useParams<{ id: string }>();
