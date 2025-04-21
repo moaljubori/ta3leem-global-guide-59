@@ -5,16 +5,41 @@ import { authApi } from "./auth";
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('admin_token');
   const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
+  
+  // Only set Content-Type to application/json if:
+  // 1. We're not sending FormData
+  // 2. Content-Type isn't already set
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  // Add authorization token if available
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
 
   try {
     const cacheBuster = endpoint.includes('?') ? `&_cb=${Date.now()}` : `?_cb=${Date.now()}`;
     const url = `${API_BASE_URL}${endpoint}${endpoint.toLowerCase().includes('status') ? '' : cacheBuster}`;
 
-    const response = await fetch(url, { ...options, headers });
+    // Don't stringify FormData objects, leave them as is
+    const finalOptions = {
+      ...options,
+      headers,
+    };
+    
+    // Only stringify the body if it's not FormData and it's not already a string
+    if (
+      finalOptions.body && 
+      !(finalOptions.body instanceof FormData) && 
+      typeof finalOptions.body !== 'string'
+    ) {
+      finalOptions.body = JSON.stringify(finalOptions.body);
+    }
+
+    const response = await fetch(url, finalOptions);
 
     if (response.status === 401) {
       authApi.logout();

@@ -25,11 +25,8 @@ export const mediaApi = {
     return apiRequest('/media/upload', {
       method: 'POST',
       body: formData,
-      headers: {
-        // Don't set Content-Type here, it will be set automatically with boundary
-      },
-      // Don't stringify FormData
-      skipStringify: true
+      // Don't set Content-Type here, it will be set automatically with boundary
+      // The request function should automatically detect FormData and not stringify it
     });
   },
   
