@@ -1,3 +1,4 @@
+
 -- Database: website_db
 
 -- Table: admin_users
@@ -50,6 +51,26 @@ CREATE TABLE IF NOT EXISTS page_versions (
     INDEX idx_version(version)
 );
 
+-- Table: media_files
+-- Stores information about uploaded media files.
+-- Includes details like file name, path, and upload date.
+-- IMPORTANT: This table is moved before sections to fix the foreign key constraint
+CREATE TABLE IF NOT EXISTS media_files (
+    file_id VARCHAR(36),
+    file_version_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    path VARCHAR(255) NOT NULL,
+    upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `type` VARCHAR(50),
+    `size` INT,
+    is_published BOOLEAN DEFAULT FALSE,
+    is_draft BOOLEAN DEFAULT TRUE, 
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_name (name),
+    INDEX idx_upload_date (upload_date)
+);
+
 -- Table: sections
 -- Represents the sections within a page.
 -- Stores the content and type of each section.
@@ -71,31 +92,13 @@ CREATE TABLE IF NOT EXISTS sections (
     INDEX idx_order (`order`)
 );
 
--- Table: media_files
--- Stores information about uploaded media files.
--- Includes details like file name, path, and upload date.
-CREATE TABLE IF NOT EXISTS media_files (
-    file_id VARCHAR(36),
-    file_version_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    path VARCHAR(255) NOT NULL,
-    upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `type` VARCHAR(50),
-    `size` INT,
-    is_published BOOLEAN DEFAULT FALSE,
-    is_draft BOOLEAN DEFAULT TRUE, 
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_name (name),
-    INDEX idx_upload_date (upload_date)
-);
-
 -- Table: section_media
 -- Join table to link media files to sections.
--- Defines the relationship between sections and media files. 
+-- Defines the relationship between sections and media files.
+-- IMPORTANT: This table must be created after both sections and media_files tables
 CREATE TABLE IF NOT EXISTS section_media (
-    section_version_id INT,
-    file_version_id INT,
+    section_version_id INT NOT NULL,
+    file_version_id INT NOT NULL,
     PRIMARY KEY (section_version_id, file_version_id),
     FOREIGN KEY (section_version_id) REFERENCES sections(section_version_id) ON DELETE CASCADE,
     FOREIGN KEY (file_version_id) REFERENCES media_files(file_version_id) ON DELETE CASCADE,
