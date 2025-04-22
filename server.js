@@ -97,26 +97,53 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Set proper MIME types for JavaScript modules
+// MIME types configuration - Enhanced for cPanel compatibility
+const mimeTypes = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.mjs': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.wav': 'audio/wav',
+  '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
+  '.woff': 'application/font-woff',
+  '.ttf': 'application/font-ttf',
+  '.eot': 'application/vnd.ms-fontobject',
+  '.otf': 'application/font-otf',
+  '.wasm': 'application/wasm'
+};
+
+// Global middleware to set MIME types for all responses
 app.use((req, res, next) => {
-  if (req.url.endsWith('.js')) {
-    res.setHeader('Content-Type', 'application/javascript');
-  } else if (req.url.endsWith('.mjs')) {
-    res.setHeader('Content-Type', 'application/javascript');
+  const extname = path.extname(req.url).toLowerCase();
+  if (mimeTypes[extname]) {
+    res.setHeader('Content-Type', mimeTypes[extname]);
   }
   next();
 });
 
 // Static files for uploaded media
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, filePath) => {
+    const extname = path.extname(filePath).toLowerCase();
+    if (mimeTypes[extname]) {
+      res.setHeader('Content-Type', mimeTypes[extname]);
+    }
+  }
+}));
 
 // Static files for client (React build)
 app.use(express.static(path.join(__dirname, 'dist'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    } else if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
+  setHeaders: (res, filePath) => {
+    const extname = path.extname(filePath).toLowerCase();
+    if (mimeTypes[extname]) {
+      res.setHeader('Content-Type', mimeTypes[extname]);
     }
   }
 }));
@@ -153,6 +180,9 @@ app.get('/api/status', (req, res) => {
     database: dbConfig.database,
     host: dbConfig.host,
     nodeEnv: process.env.NODE_ENV,
+    platform: process.platform,
+    cwd: process.cwd(),
+    dirname: __dirname
   });
 });
 
@@ -170,6 +200,19 @@ app.get('/api/debug/tables', async (req, res) => {
   }
 });
 
+// Debug route to check MIME type settings
+app.get('/api/debug/mime', (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ message: 'Debug endpoints are disabled in production' });
+  }
+  
+  res.json({
+    mimeTypes,
+    headers: req.headers,
+    nodeEnv: process.env.NODE_ENV
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);
@@ -182,6 +225,8 @@ app.use((err, req, res, next) => {
 
 // For React Router (SPA) - handle any requests not matched by the above routes
 app.get('*', (req, res) => {
+  // Set proper content type for HTML files
+  res.setHeader('Content-Type', 'text/html');
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
@@ -196,9 +241,13 @@ async function startServer() {
   }
   
   // In production, warn but continue even if DB connection fails initially
-  if (!dbConnected) {
+  if (!dbConnected && (process.env.ALLOW_DB_FAIL === 'true' || process.env.NODE_ENV !== 'production')) {
     console.warn('⚠️ WARNING: Database connection failed, but continuing server startup');
     console.warn('Please check your database configuration and ensure your database is running');
+  } else if (!dbConnected) {
+    console.error('❌ ERROR: Database connection failed and ALLOW_DB_FAIL is not set to true');
+    console.error('Set ALLOW_DB_FAIL=true in your environment variables to start the server anyway');
+    process.exit(1);
   }
   
   app.listen(PORT, () => {
