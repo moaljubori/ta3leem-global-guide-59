@@ -35,14 +35,14 @@
 
   <body>
     <div id="root"></div>
+    <!-- Required Lovable script for Pick and Edit functionality -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <!-- Dynamic script loading with proper MIME types -->
     <script>
       // Load scripts in the correct order
       document.addEventListener('DOMContentLoaded', async () => {
         try {
-          // First load the GPT Engineer script
-          await loadScript('https://cdn.gpteng.co/gptengineer.js');
-          // Then load the main application script
+          // The Lovable required script loads above, so just load the main application script
           await loadScript('/src/main.tsx');
         } catch (error) {
           console.error('Failed to load scripts:', error);
