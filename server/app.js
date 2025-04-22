@@ -79,9 +79,22 @@ app.use((err, req, res, next) => {
 });
 
 // For React Router (SPA) - handle any requests not matched by the above routes
+// This is the critical part for SPA routing - it sends the index.html for any non-API routes
 app.get('*', (req, res) => {
+  // Don't handle API routes with this catch-all
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  
   res.setHeader('Content-Type', 'text/html');
-  res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+  const indexPath = path.join(__dirname, '../dist', 'index.html');
+  
+  // Check if the file exists before sending
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Index file not found. Make sure the application is built correctly.');
+  }
 });
 
 module.exports = app;
