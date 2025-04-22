@@ -62,6 +62,12 @@ app.get('/api/debug/mime', (req, res) => {
   });
 });
 
+// MIME type test endpoint for JavaScript modules
+app.get('/api/debug/mime-test', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.send('console.log("MIME type test successful")');
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);

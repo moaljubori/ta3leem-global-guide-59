@@ -5,11 +5,14 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 
-// MIME types config
+// Enhanced MIME types config with module types
 const mimeTypes = {
   '.html': 'text/html',
   '.js': 'application/javascript',
   '.mjs': 'application/javascript',
+  '.tsx': 'application/javascript',
+  '.ts': 'application/javascript',
+  '.jsx': 'application/javascript',
   '.css': 'text/css',
   '.json': 'application/json',
   '.png': 'image/png',
@@ -36,6 +39,7 @@ function setupCommonMiddleware(app) {
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
 
+  // Enhanced middleware to properly set Content-Type headers for all files
   app.use((req, res, next) => {
     const extname = path.extname(req.url).toLowerCase();
     if (mimeTypes[extname]) {
@@ -54,12 +58,17 @@ function setupCommonMiddleware(app) {
     }
   }));
 
-  // Static files for client (React build)
+  // Static files for client (React build) with proper MIME types
   app.use(express.static(path.join(__dirname, '../../dist'), {
     setHeaders: (res, filePath) => {
       const extname = path.extname(filePath).toLowerCase();
       if (mimeTypes[extname]) {
         res.setHeader('Content-Type', mimeTypes[extname]);
+      }
+      
+      // Force JavaScript MIME type for module scripts
+      if (['.js', '.mjs', '.ts', '.tsx'].includes(extname)) {
+        res.setHeader('Content-Type', 'application/javascript');
       }
     }
   }));
