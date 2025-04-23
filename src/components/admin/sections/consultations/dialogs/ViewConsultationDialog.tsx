@@ -1,5 +1,4 @@
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,8 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Clock, Send, Trash2 } from "lucide-react";
-import { ConsultationStatusBadge } from "../ConsultationStatusBadge";
 import { Consultation } from "../useConsultations";
+import { ConsultationDetails } from "../dialog-content/ConsultationDetails";
 
 interface ViewConsultationDialogProps {
   consultation: Consultation | null;
@@ -45,47 +44,10 @@ export const ViewConsultationDialog = ({
         </DialogHeader>
         
         {consultation && (
-          <div className="space-y-4">
-            <div className="flex justify-between flex-wrap gap-2">
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <Badge className="ml-2">الاسم</Badge>
-                  <span>{consultation.name}</span>
-                </div>
-                <div className="flex items-center">
-                  <Badge className="ml-2">البريد الإلكتروني</Badge>
-                  <span>{consultation.email}</span>
-                </div>
-                <div className="flex items-center">
-                  <Badge className="ml-2">رقم الهاتف</Badge>
-                  <span>{consultation.phone}</span>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center">
-                  <Badge className="ml-2">التاريخ</Badge>
-                  <span>{formatDate(consultation.created_at)}</span>
-                </div>
-                <div className="flex items-center">
-                  <Badge className="ml-2">الحالة</Badge>
-                  <ConsultationStatusBadge status={consultation.status} />
-                </div>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Badge>الموضوع</Badge>
-              <p className="p-3 bg-gray-50 rounded-md">{consultation.subject}</p>
-            </div>
-            
-            <div className="space-y-2">
-              <Badge>الرسالة</Badge>
-              <div className="p-3 bg-gray-50 rounded-md whitespace-pre-wrap">
-                {consultation.message}
-              </div>
-            </div>
-          </div>
+          <ConsultationDetails
+            consultation={consultation}
+            formatDate={formatDate}
+          />
         )}
         
         <DialogFooter className="flex flex-row justify-between sm:justify-between gap-2">
