@@ -1,23 +1,9 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Mail, Send, Trash2, Loader2, Clock } from "lucide-react";
-import { ConsultationStatusBadge } from "./ConsultationStatusBadge";
+
+import { ViewConsultationDialog } from "./dialogs/ViewConsultationDialog";
+import { ReplyConsultationDialog } from "./dialogs/ReplyConsultationDialog";
+import { DeleteConsultationDialog } from "./dialogs/DeleteConsultationDialog";
+import { StatusChangeDialog } from "./dialogs/StatusChangeDialog";
 import { Consultation } from "./useConsultations";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 
 interface ConsultationDialogsProps {
   selectedConsultation: Consultation | null;
@@ -62,229 +48,43 @@ export const ConsultationDialogs = ({
 }: ConsultationDialogsProps) => {
   return (
     <>
-      <Dialog open={viewDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>تفاصيل الاستشارة</DialogTitle>
-            <DialogDescription>
-              {selectedConsultation && `استشارة مقدمة من ${selectedConsultation.name}`}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedConsultation && (
-            <div className="space-y-4">
-              <div className="flex justify-between flex-wrap gap-2">
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Badge className="ml-2">الاسم</Badge>
-                    <span>{selectedConsultation.name}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Badge className="ml-2">البريد الإلكتروني</Badge>
-                    <span>{selectedConsultation.email}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Badge className="ml-2">رقم الهاتف</Badge>
-                    <span>{selectedConsultation.phone}</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <Badge className="ml-2">التاريخ</Badge>
-                    <span>{formatDate(selectedConsultation.created_at)}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Badge className="ml-2">الحالة</Badge>
-                    <ConsultationStatusBadge status={selectedConsultation.status} />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Badge>الموضوع</Badge>
-                <p className="p-3 bg-gray-50 rounded-md">{selectedConsultation.subject}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Badge>الرسالة</Badge>
-                <div className="p-3 bg-gray-50 rounded-md whitespace-pre-wrap">
-                  {selectedConsultation.message}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter className="flex flex-row justify-between sm:justify-between gap-2">
-            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
-              إغلاق
-            </Button>
-            
-            <div className="space-x-2 space-x-reverse">
-              <Button variant="secondary" onClick={onOpenStatusChangeDialog} disabled={isProcessing}>
-                <Clock className="ml-2 h-4 w-4" />
-                تغيير الحالة
-              </Button>
-              
-              <Button variant="secondary" onClick={onOpenReplyDialog} disabled={isProcessing}>
-                <Send className="ml-2 h-4 w-4" />
-                إرسال رد
-              </Button>
-              
-              <Button variant="destructive" onClick={onOpenDeleteDialog} disabled={isProcessing}>
-                <Trash2 className="ml-2 h-4 w-4" />
-                حذف
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ViewConsultationDialog 
+        consultation={selectedConsultation}
+        open={viewDialogOpen}
+        onClose={onCloseDialog}
+        onOpenReplyDialog={onOpenReplyDialog}
+        onOpenDeleteDialog={onOpenDeleteDialog}
+        onOpenStatusChangeDialog={onOpenStatusChangeDialog}
+        formatDate={formatDate}
+        isProcessing={isProcessing}
+      />
       
-      <Dialog open={replyDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Mail className="ml-2 h-5 w-5" />
-              إرسال رد
-            </DialogTitle>
-            <DialogDescription>
-              {selectedConsultation && `إرسال رد إلى ${selectedConsultation.name} (${selectedConsultation.email})`}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedConsultation && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">الاستفسار الأصلي:</h4>
-                <div className="p-3 bg-gray-50 rounded-md text-gray-700 text-sm">
-                  <p className="font-medium mb-1">{selectedConsultation.subject}</p>
-                  <p>{selectedConsultation.message}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="reply" className="text-sm font-medium">
-                  الرد:
-                </label>
-                <textarea 
-                  id="reply"
-                  className="w-full h-32 p-3 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                  value={replyMessage}
-                  onChange={(e) => setReplyMessage(e.target.value)}
-                  placeholder="اكتب ردك هن��..."
-                  disabled={isProcessing}
-                />
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
-              إلغاء
-            </Button>
-            <Button onClick={() => onSendReply(replyMessage)} disabled={isProcessing}>
-              {isProcessing ? (
-                <>
-                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                  جاري الإرسال...
-                </>
-              ) : (
-                <>
-                  <Send className="ml-2 h-4 w-4" />
-                  إرسال الرد
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReplyConsultationDialog
+        consultation={selectedConsultation}
+        open={replyDialogOpen}
+        onClose={onCloseDialog}
+        replyMessage={replyMessage}
+        setReplyMessage={setReplyMessage}
+        onSendReply={onSendReply}
+        isProcessing={isProcessing}
+      />
       
-      <Dialog open={deleteDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">تأكيد الحذف</DialogTitle>
-            <DialogDescription>
-              هل أنت متأكد من رغبتك في حذف هذه الاستشارة؟ لا يمكن التراجع عن هذا الإجراء.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
-              إلغاء
-            </Button>
-            <Button variant="destructive" onClick={onDelete} disabled={isProcessing}>
-              {isProcessing ? (
-                <>
-                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                  جاري الحذف...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="ml-2 h-4 w-4" />
-                  تأكيد الحذف
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConsultationDialog
+        open={deleteDialogOpen}
+        onClose={onCloseDialog}
+        onDelete={onDelete}
+        isProcessing={isProcessing}
+      />
       
-      <Dialog open={statusChangeDialogOpen} onOpenChange={isProcessing ? undefined : onCloseDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Clock className="ml-2 h-5 w-5" />
-              تغيير حالة الاستشارة
-            </DialogTitle>
-            <DialogDescription>
-              {selectedConsultation && `تغيير حالة استشارة ${selectedConsultation.name}`}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedConsultation && (
-            <div className="space-y-4 py-2">
-              <div className="space-y-2">
-                <label htmlFor="status" className="text-sm font-medium">
-                  اختر الحالة الجديدة:
-                </label>
-                <Select 
-                  value={newStatus} 
-                  onValueChange={(value: "pending" | "replied" | "closed") => setNewStatus(value)}
-                  disabled={isProcessing}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="اختر الحالة" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">قيد الانتظار</SelectItem>
-                    <SelectItem value="replied">تم الرد</SelectItem>
-                    <SelectItem value="closed">مغلق</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
-              إلغاء
-            </Button>
-            <Button onClick={() => onChangeStatus(newStatus)} disabled={isProcessing}>
-              {isProcessing ? (
-                <>
-                  <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                  جاري التحديث...
-                </>
-              ) : (
-                <>
-                  <Clock className="ml-2 h-4 w-4" />
-                  تحديث الحالة
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <StatusChangeDialog
+        consultation={selectedConsultation}
+        open={statusChangeDialogOpen}
+        onClose={onCloseDialog}
+        newStatus={newStatus}
+        setNewStatus={setNewStatus}
+        onChangeStatus={onChangeStatus}
+        isProcessing={isProcessing}
+      />
     </>
   );
 };
