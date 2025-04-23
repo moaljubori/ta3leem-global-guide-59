@@ -60,8 +60,11 @@ export const AdminConsultations = () => {
       <ConsultationTable
         consultations={consultations}
         onView={handleViewConsultation}
+        onReply={handleOpenReplyDialog}
+        onDelete={handleOpenDeleteDialog}
+        onChangeStatus={handleOpenStatusChangeDialog}
         formatDate={formatDate}
-        isLoading={isLoading}
+        disabled={isLoading}
       />
 
       <ConsultationDialogs
@@ -79,7 +82,7 @@ export const AdminConsultations = () => {
         onOpenDeleteDialog={handleOpenDeleteDialog}
         onOpenStatusChangeDialog={handleOpenStatusChangeDialog}
         onSendReply={handleSendReply}
-        onDeleteConsultation={handleDeleteConsultation}
+        onDelete={handleDeleteConsultation}
         onChangeStatus={handleChangeStatus}
         formatDate={formatDate}
         isProcessing={isProcessing}
