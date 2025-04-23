@@ -1,6 +1,6 @@
 
 {
-  "name": "MyDatabase",
+  "name": "mydatabase",
   "host": "localhost",
   "port": 3306,
   "username": "dbuser",
@@ -9,5 +9,5 @@
   "connectionLimit": 10,
   "waitForConnections": true,
   "queueLimit": 0,
-  "comments": "Replace these values with your actual database credentials. For production, use environment variables for sensitive data."
+  "comments": "Replace these values with your actual database credentials from cPanel. For production, use environment variables for sensitive data."
 }

@@ -30,6 +30,15 @@ export const ConsultationDetails = ({
           {consultation.message}
         </div>
       </div>
+      
+      {consultation.reply && (
+        <div className="space-y-2">
+          <Badge variant="outline" className="bg-green-50">الرد المرسل</Badge>
+          <div className="p-3 bg-green-50 rounded-md whitespace-pre-wrap">
+            {consultation.reply}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

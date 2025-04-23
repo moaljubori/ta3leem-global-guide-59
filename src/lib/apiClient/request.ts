@@ -38,8 +38,10 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     ) {
       finalOptions.body = JSON.stringify(finalOptions.body);
     }
-
+    
+    console.log(`API Request: ${url}`, finalOptions);
     const response = await fetch(url, finalOptions);
+    console.log(`API Response status: ${response.status}`);
 
     if (response.status === 401) {
       authApi.logout();
@@ -48,18 +50,23 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     }
 
     const contentType = response.headers.get('content-type');
+    let data;
+    
     if (contentType && contentType.includes('application/json')) {
-      const data = await response.json();
+      data = await response.json();
+      console.log('API Response data:', data);
       if (!response.ok) throw new Error(data.message || `API request failed with status ${response.status}`);
       return data;
     } else {
       if (!response.ok) {
         const text = await response.text();
+        console.error('API Error text:', text);
         throw new Error(`API request failed with status ${response.status}`);
       }
       return { success: true, message: 'Operation completed successfully' };
     }
   } catch (error) {
+    console.error('API request error:', error);
     throw error;
   }
 }

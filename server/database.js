@@ -10,6 +10,9 @@ try {
   if (fs.existsSync(dbConfigPath)) {
     const dbConfigRaw = fs.readFileSync(dbConfigPath, 'utf8');
     dbConfig = JSON.parse(dbConfigRaw);
+    
+    // Override with environment variables if provided
+    // This allows configuration via environment variables or .env file
     if (process.env.DB_HOST) dbConfig.host = process.env.DB_HOST;
     if (process.env.DB_USER) dbConfig.username = process.env.DB_USER;
     if (process.env.DB_PASSWORD) dbConfig.password = process.env.DB_PASSWORD;
@@ -27,6 +30,7 @@ try {
       queueLimit: 0
     };
   }
+  
   console.log('Database configuration loaded:', {
     host: dbConfig.host,
     database: dbConfig.database,
@@ -37,6 +41,7 @@ try {
   process.exit(1);
 }
 
+// Create the database connection pool
 const pool = mysql.createPool({
   host: dbConfig.host,
   user: dbConfig.username || 'dbuser',
@@ -48,6 +53,7 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Test database connection
 async function testDbConnection() {
   try {
     const connection = await pool.getConnection();
