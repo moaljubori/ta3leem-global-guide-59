@@ -30,9 +30,9 @@ interface ConsultationDialogsProps {
   newStatus?: "pending" | "replied" | "closed";
   setNewStatus?: (status: "pending" | "replied" | "closed") => void;
   onCloseDialog: () => void;
-  onSendReply: () => void;
+  onSendReply: (replyMessage: string) => void;
   onDelete: () => void;
-  onChangeStatus?: () => void;
+  onChangeStatus?: (newStatus: "pending" | "replied" | "closed") => void;
   formatDate: (date: string) => string;
   onOpenReplyDialog: () => void;
   onOpenDeleteDialog: () => void;
@@ -171,7 +171,7 @@ export const ConsultationDialogs = ({
                   className="w-full h-32 p-3 border rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" 
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
-                  placeholder="اكتب ردك هنا..."
+                  placeholder="اكتب ردك هن��..."
                   disabled={isProcessing}
                 />
               </div>
@@ -182,7 +182,7 @@ export const ConsultationDialogs = ({
             <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
               إلغاء
             </Button>
-            <Button onClick={onSendReply} disabled={isProcessing}>
+            <Button onClick={() => onSendReply(replyMessage)} disabled={isProcessing}>
               {isProcessing ? (
                 <>
                   <Loader2 className="ml-2 h-4 w-4 animate-spin" />
@@ -269,7 +269,7 @@ export const ConsultationDialogs = ({
             <Button variant="outline" onClick={onCloseDialog} disabled={isProcessing}>
               إلغاء
             </Button>
-            <Button onClick={onChangeStatus} disabled={isProcessing}>
+            <Button onClick={() => onChangeStatus(newStatus)} disabled={isProcessing}>
               {isProcessing ? (
                 <>
                   <Loader2 className="ml-2 h-4 w-4 animate-spin" />

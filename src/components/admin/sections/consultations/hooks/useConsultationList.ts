@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/apiClient";
 import { Consultation } from "../useConsultations";
@@ -30,6 +30,11 @@ export const useConsultationList = () => {
       setIsLoading(false);
     }
   }, [toast]);
+  
+  // Fetch consultations on initial load
+  useEffect(() => {
+    fetchConsultations();
+  }, [fetchConsultations]);
 
   const filteredConsultations = useCallback(() => {
     return consultations.filter(consultation => {

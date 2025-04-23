@@ -6,7 +6,7 @@ import { Consultation } from "../useConsultations";
 
 interface UseConsultationActionsProps {
   selectedConsultation: Consultation | null;
-  setConsultations: (consultations: Consultation[]) => void;
+  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
   closeDialog: () => void;
 }
 
@@ -42,7 +42,7 @@ export const useConsultationActions = ({
         description: `تم الرد على استفسار ${selectedConsultation.name}`,
       });
       
-      setConsultations(prev => 
+      setConsultations((prev: Consultation[]) => 
         prev.map(item => 
           item.id === selectedConsultation.id 
             ? { ...item, status: "replied" } 
@@ -76,7 +76,7 @@ export const useConsultationActions = ({
         description: "تم حذف الاستشارة من النظام",
       });
       
-      setConsultations(prev => 
+      setConsultations((prev: Consultation[]) => 
         prev.filter(item => item.id !== selectedConsultation.id)
       );
       
@@ -111,7 +111,7 @@ export const useConsultationActions = ({
         }`,
       });
       
-      setConsultations(prev => 
+      setConsultations((prev: Consultation[]) => 
         prev.map(item => 
           item.id === selectedConsultation.id 
             ? { ...item, status: newStatus } 
