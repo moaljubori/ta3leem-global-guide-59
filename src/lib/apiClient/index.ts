@@ -10,6 +10,7 @@ import { advertisementsApi } from "./advertisements";
 import { usersApi } from "./users";
 import { uploadFile } from "./upload";
 import { mediaApi } from "./media";
+import { customCodeApi } from "./customCode";
 
 export const apiClient = {
   auth: authApi,
@@ -21,5 +22,6 @@ export const apiClient = {
   advertisements: advertisementsApi,
   users: usersApi,
   uploadFile,
-  media: mediaApi
+  media: mediaApi,
+  customCode: customCodeApi
 };

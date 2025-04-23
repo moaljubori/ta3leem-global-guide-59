@@ -7,6 +7,7 @@ const advertisementsRoutes = require('./advertisements');
 const consultationsRoutes = require('./consultations');
 const settingsRoutes = require('./settings');
 const blogRoutes = require('./blog');
+const customCodeRoutes = require('./custom-code');
 
 function registerRoutes(app) {
   app.use('/api/auth', authRoutes);
@@ -17,6 +18,7 @@ function registerRoutes(app) {
   app.use('/api/consultations', consultationsRoutes);
   app.use('/api/settings', settingsRoutes);
   app.use('/api/blog', blogRoutes);
+  app.use('/api/custom-code', customCodeRoutes);
 }
 
 module.exports = registerRoutes;

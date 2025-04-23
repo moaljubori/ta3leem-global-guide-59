@@ -1,12 +1,11 @@
 
-import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-import { ConsultationFilters } from "./consultations/ConsultationFilters";
+import { useState } from "react";
 import { ConsultationTable } from "./consultations/ConsultationTable";
+import { ConsultationFilters } from "./consultations/ConsultationFilters";
 import { ConsultationDialogs } from "./consultations/ConsultationDialogs";
-import { useConsultations } from "./consultations/useConsultations";
-import { useCallback, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { useConsultationsApi } from "./consultations/useConsultationsApi";
 
 export const AdminConsultations = () => {
   const {
@@ -34,101 +33,55 @@ export const AdminConsultations = () => {
     handleOpenDeleteDialog,
     handleOpenStatusChangeDialog,
     isProcessing,
+    isLoading,
     refreshConsultations
-  } = useConsultations();
-
-  const [refreshing, setRefreshing] = useState(false);
-  const { toast } = useToast();
-
-  const handleRefresh = useCallback(async () => {
-    if (refreshing || isProcessing) return;
-    
-    setRefreshing(true);
-    
-    try {
-      // Call the actual refresh function
-      await refreshConsultations();
-      
-      // Show refresh feedback
-      toast({
-        title: "تحديث البيانات",
-        description: "تم تحديث قائمة الاستشارات بنجاح",
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ في التحديث",
-        description: "حدث خطأ أثناء تحديث البيانات، يرجى المحاولة مرة أخرى",
-        variant: "destructive",
-      });
-    } finally {
-      // Reset refreshing state after animation
-      setTimeout(() => {
-        setRefreshing(false);
-      }, 800);
-    }
-  }, [refreshing, isProcessing, refreshConsultations, toast]);
+  } = useConsultationsApi();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">إدارة الاستشارات</h2>
-        <Button 
-          variant="outline" 
-          className="flex items-center" 
-          onClick={handleRefresh}
-          disabled={refreshing || isProcessing}
-          aria-label="تحديث قائمة الاستشارات"
-        >
-          <RefreshCw className={`ml-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          تحديث
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-3xl font-bold tracking-tight">طلبات الاستشارة</h2>
+        <Button onClick={refreshConsultations} variant="outline" disabled={isLoading}>
+          {isLoading ? (
+            <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري التحميل</>
+          ) : (
+            <>تحديث</>
+          )}
         </Button>
       </div>
-      
+
       <ConsultationFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-        disabled={isProcessing}
       />
-      
+
       <ConsultationTable
         consultations={consultations}
         onView={handleViewConsultation}
-        onReply={(consultation) => {
-          handleViewConsultation(consultation);
-          handleOpenReplyDialog();
-        }}
-        onDelete={(consultation) => {
-          handleViewConsultation(consultation);
-          handleOpenDeleteDialog();
-        }}
-        onChangeStatus={(consultation) => {
-          handleViewConsultation(consultation);
-          handleOpenStatusChangeDialog();
-        }}
         formatDate={formatDate}
-        disabled={isProcessing}
+        isLoading={isLoading}
       />
-      
+
       <ConsultationDialogs
-        selectedConsultation={selectedConsultation}
         viewDialogOpen={viewDialogOpen}
         replyDialogOpen={replyDialogOpen}
         deleteDialogOpen={deleteDialogOpen}
         statusChangeDialogOpen={statusChangeDialogOpen}
+        selectedConsultation={selectedConsultation}
         replyMessage={replyMessage}
         setReplyMessage={setReplyMessage}
         newStatus={newStatus}
         setNewStatus={setNewStatus}
         onCloseDialog={closeDialog}
-        onSendReply={handleSendReply}
-        onDelete={handleDeleteConsultation}
-        onChangeStatus={handleChangeStatus}
-        formatDate={formatDate}
         onOpenReplyDialog={handleOpenReplyDialog}
         onOpenDeleteDialog={handleOpenDeleteDialog}
         onOpenStatusChangeDialog={handleOpenStatusChangeDialog}
+        onSendReply={handleSendReply}
+        onDeleteConsultation={handleDeleteConsultation}
+        onChangeStatus={handleChangeStatus}
+        formatDate={formatDate}
         isProcessing={isProcessing}
       />
     </div>

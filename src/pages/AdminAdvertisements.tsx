@@ -5,14 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Advertisement } from "@/components/admin/advertisements/types";
 import { AdvertisementForm } from "@/components/admin/advertisements/AdvertisementForm";
 import { AdvertisementsTable } from "@/components/admin/advertisements/AdvertisementsTable";
-import { useAdvertisements } from "@/components/admin/advertisements/useAdvertisements";
+import { useAdvertisementsApi } from "@/components/admin/advertisements/useAdvertisementsApi";
 
 const AdminAdvertisements = () => {
-  const { ads, toggleAdStatus, deleteAd, saveAd } = useAdvertisements();
+  const { ads, toggleAdStatus, deleteAd, saveAd, isLoading, refreshAds } = useAdvertisementsApi();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -42,9 +42,9 @@ const AdminAdvertisements = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSaveAd = () => {
+  const handleSaveAd = async () => {
     if (currentAd && currentAd.name && currentAd.content) {
-      saveAd(currentAd);
+      await saveAd(currentAd);
       setIsCreateDialogOpen(false);
       setIsEditDialogOpen(false);
     }
@@ -55,10 +55,15 @@ const AdminAdvertisements = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-3xl font-bold tracking-tight">إدارة الإعلانات</h2>
-          <Button onClick={handleCreateAd}>
-            <Plus className="ml-2 h-4 w-4" />
-            إضافة إعلان جديد
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={refreshAds} variant="outline" disabled={isLoading}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "تحديث"}
+            </Button>
+            <Button onClick={handleCreateAd}>
+              <Plus className="ml-2 h-4 w-4" />
+              إضافة إعلان جديد
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="active" className="space-y-4">
@@ -75,12 +80,18 @@ const AdminAdvertisements = () => {
                 <CardDescription>الإعلانات التي تظهر حاليًا على الموقع</CardDescription>
               </CardHeader>
               <CardContent>
-                <AdvertisementsTable 
-                  advertisements={ads.filter(ad => ad.isActive)}
-                  onEdit={handleEditAd}
-                  onDelete={handleDeleteConfirmation}
-                  onToggleStatus={toggleAdStatus}
-                />
+                {isLoading ? (
+                  <div className="flex justify-center p-4">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <AdvertisementsTable 
+                    advertisements={ads.filter(ad => ad.isActive)}
+                    onEdit={handleEditAd}
+                    onDelete={handleDeleteConfirmation}
+                    onToggleStatus={toggleAdStatus}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -92,12 +103,18 @@ const AdminAdvertisements = () => {
                 <CardDescription>الإعلانات التي تم إيقافها ولا تظهر على الموقع</CardDescription>
               </CardHeader>
               <CardContent>
-                <AdvertisementsTable 
-                  advertisements={ads.filter(ad => !ad.isActive)}
-                  onEdit={handleEditAd}
-                  onDelete={handleDeleteConfirmation}
-                  onToggleStatus={toggleAdStatus}
-                />
+                {isLoading ? (
+                  <div className="flex justify-center p-4">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <AdvertisementsTable 
+                    advertisements={ads.filter(ad => !ad.isActive)}
+                    onEdit={handleEditAd}
+                    onDelete={handleDeleteConfirmation}
+                    onToggleStatus={toggleAdStatus}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -109,12 +126,18 @@ const AdminAdvertisements = () => {
                 <CardDescription>قائمة بجميع الإعلانات النشطة والمتوقفة</CardDescription>
               </CardHeader>
               <CardContent>
-                <AdvertisementsTable 
-                  advertisements={ads}
-                  onEdit={handleEditAd}
-                  onDelete={handleDeleteConfirmation}
-                  onToggleStatus={toggleAdStatus}
-                />
+                {isLoading ? (
+                  <div className="flex justify-center p-4">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                ) : (
+                  <AdvertisementsTable 
+                    advertisements={ads}
+                    onEdit={handleEditAd}
+                    onDelete={handleDeleteConfirmation}
+                    onToggleStatus={toggleAdStatus}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
