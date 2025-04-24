@@ -41,27 +41,46 @@ try {
   process.exit(1);
 }
 
-// Create the database connection pool
+// Create the database connection pool with detailed configuration
 const pool = mysql.createPool({
   host: dbConfig.host,
-  user: dbConfig.username || 'dbuser',
-  password: dbConfig.password || '',
+  user: dbConfig.username || dbConfig.user, // Support both formats
+  password: dbConfig.password,
   database: dbConfig.database,
   port: dbConfig.port,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  debug: process.env.NODE_ENV !== 'production',
+  // Add cPanel specific settings if needed
+  multipleStatements: true,
+  dateStrings: true
 });
 
-// Test database connection
+// Extended test database connection
 async function testDbConnection() {
   try {
     const connection = await pool.getConnection();
     console.log('Database connection successful');
+    
+    // Test query to verify connection
+    const [result] = await connection.query('SELECT 1 as connected');
+    console.log('Database query successful:', result);
+    
     connection.release();
     return true;
   } catch (error) {
-    console.error('Database connection failed:', error);
+    console.error('Database connection failed with error:', error);
+    
+    // Provide more specific error messages based on common cPanel issues
+    if (error.code === 'ECONNREFUSED') {
+      console.error('Connection refused. Please check if the database server is running and the host/port is correct.');
+    } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+      console.error('Access denied. Please verify your database username and password.');
+    } else if (error.code === 'ER_BAD_DB_ERROR') {
+      console.error('Database does not exist. Please check your database name.');
+    }
+    
     return false;
   }
 }

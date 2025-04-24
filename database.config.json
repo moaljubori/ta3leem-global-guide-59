@@ -9,5 +9,5 @@
   "connectionLimit": 10,
   "waitForConnections": true,
   "queueLimit": 0,
-  "comments": "Replace these values with your actual database credentials from cPanel. For production, use environment variables for sensitive data."
+  "comments": "For cPanel hosting, use the database credentials provided by your hosting provider. You can override these values using environment variables in .env file."
 }
