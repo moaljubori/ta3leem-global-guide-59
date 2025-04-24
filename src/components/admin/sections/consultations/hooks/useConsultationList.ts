@@ -1,13 +1,29 @@
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Consultation } from "../types/consultation";
-import { mockConsultations } from "../data/mockConsultations";
+import { apiClient } from "@/lib/apiClient";
 
 export const useConsultationList = () => {
-  const [consultations, setConsultations] = useState<Consultation[]>([...mockConsultations]);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "replied" | "closed">("all");
   const [isLoading, setIsLoading] = useState(false);
+
+  const fetchConsultations = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.consultations.getAllConsultations();
+      setConsultations(response.consultations || []);
+    } catch (error) {
+      console.error('Error fetching consultations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConsultations();
+  }, []);
 
   const filteredConsultations = useMemo(() => {
     return consultations.filter(consultation => {
@@ -23,14 +39,7 @@ export const useConsultationList = () => {
   }, [consultations, searchTerm, statusFilter]);
 
   const refreshConsultations = () => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setConsultations([...mockConsultations]);
-      setSearchTerm("");
-      setStatusFilter("all");
-      setIsLoading(false);
-    }, 500);
+    fetchConsultations();
   };
 
   return {
