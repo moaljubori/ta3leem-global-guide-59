@@ -1,5 +1,4 @@
 
-import { useCallback, useState } from "react";
 import { useConsultationList } from "./hooks/useConsultationList";
 import { useConsultationDialogs } from "./hooks/useConsultationDialogs";
 import { useConsultationActions } from "./hooks/useConsultationActions";
