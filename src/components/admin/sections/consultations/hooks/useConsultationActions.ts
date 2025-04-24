@@ -1,25 +1,17 @@
 
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { apiClient } from "@/lib/apiClient";
-import { Consultation } from "../useConsultations";
+import { Consultation } from "../types/consultation";
 
-interface UseConsultationActionsProps {
-  selectedConsultation: Consultation | null;
-  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
-  closeDialog: () => void;
-}
-
-export const useConsultationActions = ({
-  selectedConsultation,
-  setConsultations,
-  closeDialog
-}: UseConsultationActionsProps) => {
+export const useConsultationActions = (
+  selectedConsultation: Consultation | null,
+  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>
+) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const handleSendReply = useCallback(async (replyMessage: string) => {
-    if (isProcessing || !selectedConsultation) return;
+  const handleSendReply = useCallback((replyMessage: string) => {
+    if (isProcessing) return;
     
     if (!replyMessage.trim()) {
       toast({
@@ -32,105 +24,77 @@ export const useConsultationActions = ({
     
     setIsProcessing(true);
     
-    try {
-      await apiClient.consultations.replyToConsultation(selectedConsultation.id, {
-        reply: replyMessage,
-      });
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      if (selectedConsultation) {
+        setConsultations(prev => 
+          prev.map(item => 
+            item.id === selectedConsultation.id 
+              ? { ...item, status: "replied", reply: replyMessage } 
+              : item
+          )
+        );
+        
+        toast({
+          title: "تم إرسال الرد بنجاح",
+          description: `تم الرد على استفسار ${selectedConsultation.name}`,
+        });
+      }
       
-      toast({
-        title: "تم إرسال الرد بنجاح",
-        description: `تم الرد على استفسار ${selectedConsultation.name}`,
-      });
-      
-      setConsultations((prev: Consultation[]) => 
-        prev.map(item => 
-          item.id === selectedConsultation.id 
-            ? { ...item, status: "replied" } 
-            : item
-        )
-      );
-      
-      closeDialog();
-    } catch (error) {
-      console.error("Error sending reply:", error);
-      toast({
-        title: "خطأ",
-        description: "فشل في إرسال الرد",
-        variant: "destructive",
-      });
-    } finally {
       setIsProcessing(false);
-    }
-  }, [selectedConsultation, toast, isProcessing, setConsultations, closeDialog]);
+    }, 300);
+  }, [selectedConsultation, toast, isProcessing, setConsultations]);
 
-  const handleDeleteConsultation = useCallback(async () => {
-    if (isProcessing || !selectedConsultation) return;
+  const handleDeleteConsultation = useCallback(() => {
+    if (isProcessing) return;
     
     setIsProcessing(true);
     
-    try {
-      await apiClient.consultations.deleteConsultation(selectedConsultation.id);
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      if (selectedConsultation) {
+        setConsultations(prev => 
+          prev.filter(item => item.id !== selectedConsultation.id)
+        );
+        
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الاستشارة من النظام",
+        });
+      }
       
-      toast({
-        title: "تم الحذف بنجاح",
-        description: "تم حذف الاستشارة من النظام",
-      });
-      
-      setConsultations((prev: Consultation[]) => 
-        prev.filter(item => item.id !== selectedConsultation.id)
-      );
-      
-      closeDialog();
-    } catch (error) {
-      console.error("Error deleting consultation:", error);
-      toast({
-        title: "خطأ",
-        description: "فشل في حذف الاستشارة",
-        variant: "destructive",
-      });
-    } finally {
       setIsProcessing(false);
-    }
-  }, [selectedConsultation, toast, isProcessing, setConsultations, closeDialog]);
+    }, 300);
+  }, [selectedConsultation, toast, isProcessing, setConsultations]);
 
-  const handleChangeStatus = useCallback(async (newStatus: "pending" | "replied" | "closed") => {
-    if (isProcessing || !selectedConsultation) return;
+  const handleChangeStatus = useCallback((newStatus: "pending" | "replied" | "closed") => {
+    if (isProcessing) return;
     
     setIsProcessing(true);
     
-    try {
-      await apiClient.consultations.updateConsultationStatus(selectedConsultation.id, {
-        status: newStatus
-      });
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      if (selectedConsultation) {
+        setConsultations(prev => 
+          prev.map(item => 
+            item.id === selectedConsultation.id 
+              ? { ...item, status: newStatus } 
+              : item
+          )
+        );
+        
+        toast({
+          title: "تم تغيير الحالة بنجاح",
+          description: `تم تغيير حالة الاستشارة إلى ${
+            newStatus === "pending" ? "قيد الانتظار" : 
+            newStatus === "replied" ? "تم الرد" : "مغلق"
+          }`,
+        });
+      }
       
-      toast({
-        title: "تم تغيير الحالة بنجاح",
-        description: `تم تغيير حالة الاستشارة إلى ${
-          newStatus === "pending" ? "قيد الانتظار" : 
-          newStatus === "replied" ? "تم الرد" : "مغلق"
-        }`,
-      });
-      
-      setConsultations((prev: Consultation[]) => 
-        prev.map(item => 
-          item.id === selectedConsultation.id 
-            ? { ...item, status: newStatus } 
-            : item
-        )
-      );
-      
-      closeDialog();
-    } catch (error) {
-      console.error("Error updating consultation status:", error);
-      toast({
-        title: "خطأ",
-        description: "فشل في تغيير حالة الاستشارة",
-        variant: "destructive",
-      });
-    } finally {
       setIsProcessing(false);
-    }
-  }, [selectedConsultation, toast, isProcessing, setConsultations, closeDialog]);
+    }, 300);
+  }, [selectedConsultation, toast, isProcessing, setConsultations]);
 
   return {
     isProcessing,

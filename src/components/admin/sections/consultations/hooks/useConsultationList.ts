@@ -1,47 +1,19 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { apiClient } from "@/lib/apiClient";
-import { Consultation } from "../useConsultations";
+import { useState, useMemo } from "react";
+import { Consultation } from "../types/consultation";
+import { mockConsultations } from "../data/mockConsultations";
 
 export const useConsultationList = () => {
-  const [consultations, setConsultations] = useState<Consultation[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [consultations, setConsultations] = useState<Consultation[]>([...mockConsultations]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "replied" | "closed">("all");
-  
-  const { toast } = useToast();
 
-  const fetchConsultations = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await apiClient.consultations.getAllConsultations();
-      if (response.consultations) {
-        setConsultations(response.consultations);
-      }
-    } catch (error) {
-      console.error("Error fetching consultations:", error);
-      toast({
-        title: "خطأ",
-        description: "فشل في تحميل الاستشارات",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-  
-  // Fetch consultations on initial load
-  useEffect(() => {
-    fetchConsultations();
-  }, [fetchConsultations]);
-
-  const filteredConsultations = useCallback(() => {
+  const filteredConsultations = useMemo(() => {
     return consultations.filter(consultation => {
       const matchesSearch = 
         consultation.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         consultation.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (consultation.subject && consultation.subject.toLowerCase().includes(searchTerm.toLowerCase()));
+        consultation.subject.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = statusFilter === "all" || consultation.status === statusFilter;
       
@@ -50,13 +22,11 @@ export const useConsultationList = () => {
   }, [consultations, searchTerm, statusFilter]);
 
   return {
-    consultations: filteredConsultations(),
-    isLoading,
+    consultations: filteredConsultations,
+    setConsultations,
     searchTerm,
     setSearchTerm,
     statusFilter,
-    setStatusFilter,
-    refreshConsultations: fetchConsultations,
-    setConsultations
+    setStatusFilter
   };
 };
