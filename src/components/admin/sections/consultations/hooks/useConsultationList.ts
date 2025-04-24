@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Consultation } from "../types/consultation";
 import { apiClient } from "@/lib/apiClient";
 
