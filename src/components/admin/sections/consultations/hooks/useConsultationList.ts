@@ -7,6 +7,7 @@ export const useConsultationList = () => {
   const [consultations, setConsultations] = useState<Consultation[]>([...mockConsultations]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "replied" | "closed">("all");
+  const [isLoading, setIsLoading] = useState(false);
 
   const filteredConsultations = useMemo(() => {
     return consultations.filter(consultation => {
@@ -21,12 +22,25 @@ export const useConsultationList = () => {
     });
   }, [consultations, searchTerm, statusFilter]);
 
+  const refreshConsultations = () => {
+    setIsLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      setConsultations([...mockConsultations]);
+      setSearchTerm("");
+      setStatusFilter("all");
+      setIsLoading(false);
+    }, 500);
+  };
+
   return {
     consultations: filteredConsultations,
     setConsultations,
     searchTerm,
     setSearchTerm,
     statusFilter,
-    setStatusFilter
+    setStatusFilter,
+    isLoading,
+    refreshConsultations
   };
 };

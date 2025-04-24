@@ -14,7 +14,9 @@ export const useConsultations = () => {
     searchTerm,
     setSearchTerm,
     statusFilter,
-    setStatusFilter
+    setStatusFilter,
+    isLoading,
+    refreshConsultations
   } = useConsultationList();
 
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
@@ -33,12 +35,6 @@ export const useConsultations = () => {
   } = useConsultationActions(selectedConsultation, setConsultations);
 
   const formatDate = useFormatDate();
-
-  const refreshConsultations = () => {
-    setConsultations([...mockConsultations]);
-    setSearchTerm("");
-    setStatusFilter("all");
-  };
 
   const closeDialog = () => {
     if (isProcessing) return;
@@ -115,6 +111,7 @@ export const useConsultations = () => {
     handleOpenDeleteDialog,
     handleOpenStatusChangeDialog,
     isProcessing,
+    isLoading,
     refreshConsultations
   };
 };

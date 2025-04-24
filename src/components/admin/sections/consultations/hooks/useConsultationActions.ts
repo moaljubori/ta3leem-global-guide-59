@@ -3,10 +3,17 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Consultation } from "../types/consultation";
 
-export const useConsultationActions = (
-  selectedConsultation: Consultation | null,
-  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>
-) => {
+interface ConsultationActionsProps {
+  selectedConsultation: Consultation | null;
+  setConsultations: React.Dispatch<React.SetStateAction<Consultation[]>>;
+  closeDialog?: () => void;
+}
+
+export const useConsultationActions = ({
+  selectedConsultation,
+  setConsultations,
+  closeDialog
+}: ConsultationActionsProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
@@ -39,11 +46,15 @@ export const useConsultationActions = (
           title: "تم إرسال الرد بنجاح",
           description: `تم الرد على استفسار ${selectedConsultation.name}`,
         });
+
+        if (closeDialog) {
+          closeDialog();
+        }
       }
       
       setIsProcessing(false);
     }, 300);
-  }, [selectedConsultation, toast, isProcessing, setConsultations]);
+  }, [selectedConsultation, toast, isProcessing, setConsultations, closeDialog]);
 
   const handleDeleteConsultation = useCallback(() => {
     if (isProcessing) return;
@@ -61,11 +72,15 @@ export const useConsultationActions = (
           title: "تم الحذف بنجاح",
           description: "تم حذف الاستشارة من النظام",
         });
+
+        if (closeDialog) {
+          closeDialog();
+        }
       }
       
       setIsProcessing(false);
     }, 300);
-  }, [selectedConsultation, toast, isProcessing, setConsultations]);
+  }, [selectedConsultation, toast, isProcessing, setConsultations, closeDialog]);
 
   const handleChangeStatus = useCallback((newStatus: "pending" | "replied" | "closed") => {
     if (isProcessing) return;
@@ -90,11 +105,15 @@ export const useConsultationActions = (
             newStatus === "replied" ? "تم الرد" : "مغلق"
           }`,
         });
+
+        if (closeDialog) {
+          closeDialog();
+        }
       }
       
       setIsProcessing(false);
     }, 300);
-  }, [selectedConsultation, toast, isProcessing, setConsultations]);
+  }, [selectedConsultation, toast, isProcessing, setConsultations, closeDialog]);
 
   return {
     isProcessing,

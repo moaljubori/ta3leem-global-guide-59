@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { Consultation } from "../useConsultations";
+import { Consultation } from "../types/consultation";
 
 export const useConsultationDialogs = () => {
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);

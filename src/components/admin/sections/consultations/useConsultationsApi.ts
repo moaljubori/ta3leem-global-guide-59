@@ -1,8 +1,9 @@
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useConsultationList } from "./hooks/useConsultationList";
 import { useConsultationDialogs } from "./hooks/useConsultationDialogs";
 import { useConsultationActions } from "./hooks/useConsultationActions";
+import { useFormatDate } from "./hooks/useFormatDate";
 
 export const useConsultationsApi = () => {
   const {
@@ -44,16 +45,7 @@ export const useConsultationsApi = () => {
     closeDialog
   });
 
-  const formatDate = useCallback((dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('ar-SA', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric',
-      hour: '2-digit', 
-      minute: '2-digit'
-    }).format(date);
-  }, []);
+  const formatDate = useFormatDate();
 
   return {
     consultations,
