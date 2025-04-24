@@ -2,6 +2,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? '/api' : "http://localhost:3001/api");
 import { authApi } from "./auth";
 
+let isRefreshing = false;
+let failedQueue: {resolve: (value: unknown) => void; reject: (reason?: any) => void}[] = [];
+
+const processQueue = (error: Error | null, token: string | null = null) => {
+  failedQueue.forEach(promise => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('admin_token');
   const headers = {
@@ -40,13 +55,69 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
     }
     
     console.log(`API Request: ${url}`, finalOptions);
-    const response = await fetch(url, finalOptions);
+    let response = await fetch(url, finalOptions);
     console.log(`API Response status: ${response.status}`);
 
+    // Handle token expiration
     if (response.status === 401) {
-      authApi.logout();
-      window.location.href = '/admin';
-      throw new Error('Authentication required');
+      const errorData = await response.json().catch(() => ({}));
+      
+      // Check if token expired error
+      if (errorData.code === 'token_expired') {
+        // If already refreshing, wait until refresh completes
+        if (isRefreshing) {
+          try {
+            await new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            });
+            // After refresh completes, retry the original request
+            return apiRequest(endpoint, options);
+          } catch (err) {
+            authApi.logout();
+            window.location.href = '/admin';
+            throw new Error('Authentication required');
+          }
+        }
+
+        // Start refreshing
+        isRefreshing = true;
+        
+        try {
+          // Try to refresh the token
+          const refreshResult = await authApi.refreshToken();
+          isRefreshing = false;
+          
+          if (refreshResult && refreshResult.token) {
+            // Update the auth header with new token
+            headers['Authorization'] = `Bearer ${refreshResult.token}`;
+            
+            // Process the queue with the new token
+            processQueue(null, refreshResult.token);
+            
+            // Retry the original request with new token
+            const retryOptions = {
+              ...finalOptions,
+              headers
+            };
+            
+            // Retry the request
+            response = await fetch(url, retryOptions);
+          } else {
+            throw new Error('Token refresh failed');
+          }
+        } catch (error) {
+          isRefreshing = false;
+          processQueue(new Error('Failed to refresh token'));
+          authApi.logout();
+          window.location.href = '/admin';
+          throw new Error('Authentication required');
+        }
+      } else {
+        // For other 401 errors, logout
+        authApi.logout();
+        window.location.href = '/admin';
+        throw new Error('Authentication required');
+      }
     }
 
     const contentType = response.headers.get('content-type');

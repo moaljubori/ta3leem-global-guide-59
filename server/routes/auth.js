@@ -1,164 +1,246 @@
 
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { JWT_SECRET, isAuthenticated } = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
 // Login route
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
-  
-  if (!username || !password) {
-    return res.status(400).json({ error: true, message: 'Username and password are required' });
-  }
-  
   try {
-    const db = req.db;
+    const { username, password } = req.body;
     
-    // Find user by username
-    const [users] = await db.query(
-      'SELECT * FROM admin_users WHERE username = ? LIMIT 1',
-      [username]
-    );
+    if (!username || !password) {
+      return res.status(400).json({ error: true, message: 'Username and password are required' });
+    }
+    
+    const db = req.db;
+    const [users] = await db.query('SELECT * FROM admin_users WHERE username = ?', [username]);
     
     if (users.length === 0) {
       return res.status(401).json({ error: true, message: 'Invalid credentials' });
     }
     
     const user = users[0];
-    
-    // Compare passwords
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     
     if (!passwordMatch) {
       return res.status(401).json({ error: true, message: 'Invalid credentials' });
     }
     
-    // Generate token
+    // Create JWT token
     const token = jwt.sign(
-      { 
-        id: user.user_id, 
-        username: user.username,
-        role: user.role,
-        first_name: user.first_name,
-        last_name: user.last_name
-      },
-      JWT_SECRET,
+      { id: user.user_id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
     
-    // Update last login time
+    // Create refresh token
+    const refreshToken = uuidv4();
+    const tokenExpires = new Date();
+    tokenExpires.setDate(tokenExpires.getDate() + 30); // 30 days
+    
+    // Update user with refresh token
     await db.query(
-      'UPDATE admin_users SET last_login = NOW() WHERE user_id = ?',
-      [user.user_id]
+      'UPDATE admin_users SET refresh_token = ?, token_expires = ?, last_login = NOW() WHERE user_id = ?',
+      [refreshToken, tokenExpires, user.user_id]
     );
     
-    // Return user info and token
-    return res.json({
-      user: {
-        id: user.user_id,
-        username: user.username,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        role: user.role
-      },
-      token
+    // Create session
+    const sessionId = uuidv4();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+    
+    await db.query(
+      'INSERT INTO user_sessions (session_id, user_id, ip_address, user_agent, expires_at) VALUES (?, ?, ?, ?, ?)',
+      [sessionId, user.user_id, req.ip, req.headers['user-agent'], expiresAt]
+    );
+    
+    // Don't send password hash to client
+    const { password_hash, refresh_token, ...userWithoutSensitiveData } = user;
+    
+    res.json({
+      success: true,
+      token,
+      refreshToken,
+      user: userWithoutSensitiveData
     });
     
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ error: true, message: 'Server error during login' });
+    res.status(500).json({ error: true, message: 'Server error during authentication' });
   }
 });
 
-// Register a new admin user (admin only)
-router.post('/register', isAuthenticated, async (req, res) => {
-  const { username, password, email, role, first_name, last_name } = req.body;
-  
-  // Validation
-  if (!username || !password || !email || !role) {
-    return res.status(400).json({ error: true, message: 'Missing required fields' });
-  }
-  
+// Refresh token route
+router.post('/refresh-token', async (req, res) => {
   try {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return res.status(400).json({ error: true, message: 'Refresh token is required' });
+    }
+    
+    const db = req.db;
+    const [users] = await db.query(
+      'SELECT * FROM admin_users WHERE refresh_token = ? AND token_expires > NOW()',
+      [refreshToken]
+    );
+    
+    if (users.length === 0) {
+      return res.status(401).json({ error: true, message: 'Invalid or expired refresh token' });
+    }
+    
+    const user = users[0];
+    
+    // Create new JWT token
+    const token = jwt.sign(
+      { id: user.user_id, username: user.username, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Create new refresh token
+    const newRefreshToken = uuidv4();
+    const tokenExpires = new Date();
+    tokenExpires.setDate(tokenExpires.getDate() + 30); // 30 days
+    
+    // Update user with new refresh token
+    await db.query(
+      'UPDATE admin_users SET refresh_token = ?, token_expires = ? WHERE user_id = ?',
+      [newRefreshToken, tokenExpires, user.user_id]
+    );
+    
+    res.json({
+      success: true,
+      token,
+      refreshToken: newRefreshToken
+    });
+    
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(500).json({ error: true, message: 'Server error refreshing token' });
+  }
+});
+
+// Register route (admin only)
+router.post('/register', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const { username, password, email, firstName, lastName, role } = req.body;
+    
+    if (!username || !password || !email || !role) {
+      return res.status(400).json({ error: true, message: 'Username, password, email, and role are required' });
+    }
+    
     const db = req.db;
     
-    // Check if user already exists
+    // Check if username or email already exists
     const [existingUsers] = await db.query(
-      'SELECT * FROM admin_users WHERE username = ? OR email = ? LIMIT 1',
+      'SELECT * FROM admin_users WHERE username = ? OR email = ?',
       [username, email]
     );
     
     if (existingUsers.length > 0) {
-      return res.status(409).json({ error: true, message: 'Username or email already exists' });
+      return res.status(400).json({ error: true, message: 'Username or email already in use' });
     }
     
     // Hash password
-    const saltRounds = 10;
+    const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
     
     // Insert new user
     const [result] = await db.query(
       `INSERT INTO admin_users 
-       (username, password_hash, email, role, first_name, last_name)
+       (username, password_hash, email, first_name, last_name, role)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [username, passwordHash, email, role, first_name, last_name]
+      [username, passwordHash, email, firstName || null, lastName || null, role]
     );
     
-    return res.status(201).json({
-      success: true, 
+    res.status(201).json({
+      success: true,
       message: 'User created successfully',
-      user_id: result.insertId
+      userId: result.insertId
     });
     
   } catch (error) {
     console.error('Registration error:', error);
-    return res.status(500).json({ error: true, message: 'Server error during registration' });
+    res.status(500).json({ error: true, message: 'Server error during registration' });
   }
 });
 
-// Get current user profile
-router.get('/profile', isAuthenticated, async (req, res) => {
+// Get current user
+router.get('/me', isAuthenticated, async (req, res) => {
   try {
-    const db = req.db;
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: true, message: 'Not authenticated' });
+    }
     
-    // Find user by ID
-    const [users] = await db.query(
-      'SELECT user_id, username, email, role, first_name, last_name, created_at FROM admin_users WHERE user_id = ? LIMIT 1',
-      [req.user.id]
-    );
+    const db = req.db;
+    const [users] = await db.query('SELECT * FROM admin_users WHERE user_id = ?', [req.user.id]);
     
     if (users.length === 0) {
       return res.status(404).json({ error: true, message: 'User not found' });
     }
     
-    // Return user info (without password)
-    return res.json({ user: users[0] });
+    const user = users[0];
+    // Don't send password hash to client
+    const { password_hash, refresh_token, ...userWithoutSensitiveData } = user;
+    
+    res.json({
+      success: true,
+      user: userWithoutSensitiveData
+    });
     
   } catch (error) {
-    console.error('Profile fetch error:', error);
-    return res.status(500).json({ error: true, message: 'Server error fetching profile' });
+    console.error('Get user error:', error);
+    res.status(500).json({ error: true, message: 'Server error getting user data' });
   }
 });
 
-// Change password
-router.post('/change-password', isAuthenticated, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: true, message: 'Current and new passwords are required' });
-  }
-  
+// Log out
+router.post('/logout', isAuthenticated, async (req, res) => {
   try {
+    const userId = req.user.id;
     const db = req.db;
     
-    // Get user with password hash
-    const [users] = await db.query(
-      'SELECT * FROM admin_users WHERE user_id = ? LIMIT 1',
-      [req.user.id]
+    // Invalidate the user's refresh token
+    await db.query(
+      'UPDATE admin_users SET refresh_token = NULL, token_expires = NULL WHERE user_id = ?',
+      [userId]
     );
+    
+    // Invalidate the user's sessions
+    await db.query(
+      'UPDATE user_sessions SET is_valid = FALSE WHERE user_id = ? AND is_valid = TRUE',
+      [userId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
+    });
+    
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({ error: true, message: 'Server error during logout' });
+  }
+});
+
+// Change password (for authenticated user)
+router.post('/change-password', isAuthenticated, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: true, message: 'Current password and new password are required' });
+    }
+    
+    const userId = req.user.id;
+    const db = req.db;
+    
+    // Get user
+    const [users] = await db.query('SELECT * FROM admin_users WHERE user_id = ?', [userId]);
     
     if (users.length === 0) {
       return res.status(404).json({ error: true, message: 'User not found' });
@@ -174,20 +256,23 @@ router.post('/change-password', isAuthenticated, async (req, res) => {
     }
     
     // Hash new password
-    const saltRounds = 10;
-    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(newPassword, saltRounds);
     
-    // Update password
+    // Update user with new password
     await db.query(
       'UPDATE admin_users SET password_hash = ? WHERE user_id = ?',
-      [newPasswordHash, req.user.id]
+      [passwordHash, userId]
     );
     
-    return res.json({ success: true, message: 'Password updated successfully' });
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
     
   } catch (error) {
-    console.error('Password change error:', error);
-    return res.status(500).json({ error: true, message: 'Server error changing password' });
+    console.error('Change password error:', error);
+    res.status(500).json({ error: true, message: 'Server error changing password' });
   }
 });
 
