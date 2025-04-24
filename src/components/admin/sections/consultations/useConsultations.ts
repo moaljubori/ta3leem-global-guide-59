@@ -12,6 +12,7 @@ export interface Consultation {
   message: string;
   status: "pending" | "replied" | "closed";
   created_at: string;
+  reply?: string;
 }
 
 const mockConsultations: Consultation[] = [
@@ -34,6 +35,7 @@ const mockConsultations: Consultation[] = [
     message: "أبحث عن منح دراسية متاحة لدراسة الهندسة في الولايات المتحدة. هل يمكنكم مساعدتي؟",
     status: "replied",
     created_at: "2025-04-01T09:15:00Z",
+    reply: "شكراً للتواصل معنا. يسرنا إخبارك بأن هناك العديد من المنح الدراسية المتاحة للطلاب الدوليين في مجال الهندسة. سنرسل لك قائمة بالمنح المتاحة والمواعيد النهائية للتقديم قريباً.",
   },
   {
     id: "3",
@@ -54,6 +56,7 @@ const mockConsultations: Consultation[] = [
     message: "هل تقدمون برامج لتعلم اللغة الإنجليزية قبل بدء الدراسة الجامعية؟",
     status: "closed",
     created_at: "2025-03-28T11:20:00Z",
+    reply: "نعم، نقدم برامج تحضيرية للغة الإنجليزية قبل بدء الدراسة الجامعية. تتراوح مدة هذه البرامج من 8 أسابيع إلى 6 أشهر حسب مستوى الطالب واحتياجاته.",
   },
   {
     id: "5",
@@ -64,6 +67,7 @@ const mockConsultations: Consultation[] = [
     message: "أرغب في معرفة خيارات السكن الطلابي المتاحة في أستراليا والتكاليف التقريبية.",
     status: "replied",
     created_at: "2025-03-25T13:10:00Z",
+    reply: "تتوفر عدة خيارات للسكن الطلابي في الجامعات الأسترالية تشمل السكن داخل الحرم الجامعي والشقق المشتركة خارج الحرم. تتراوح التكاليف من 200 إلى 500 دولار أسترالي أسبوعياً حسب المدينة والمنطقة.",
   },
 ];
 
@@ -127,7 +131,7 @@ export const useConsultations = () => {
         setConsultations(prev => 
           prev.map(item => 
             item.id === selectedConsultation.id 
-              ? { ...item, status: "replied" } 
+              ? { ...item, status: "replied", reply: replyMessage } 
               : item
           )
         );

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const { isAuthenticated } = require('../middleware/auth');
@@ -192,6 +191,36 @@ router.delete('/:consultationId', isAuthenticated, async (req, res) => {
   } catch (error) {
     console.error('Error deleting consultation:', error);
     res.status(500).json({ error: true, message: 'Server error deleting consultation' });
+  }
+});
+
+// Reply to consultation
+router.post('/:consultationId/reply', isAuthenticated, async (req, res) => {
+  const consultationId = req.params.consultationId;
+  const { reply } = req.body;
+  
+  // Validation
+  if (!reply) {
+    return res.status(400).json({ error: true, message: 'Reply message is required' });
+  }
+  
+  try {
+    const db = req.db;
+    
+    // Update consultation with reply
+    await db.query(
+      'UPDATE consultations SET reply = ?, status = "replied", updated_at = NOW() WHERE consultation_id = ?',
+      [reply, consultationId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Reply sent successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error sending reply:', error);
+    res.status(500).json({ error: true, message: 'Server error sending reply' });
   }
 });
 

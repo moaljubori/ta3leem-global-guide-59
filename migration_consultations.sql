@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS consultations (
     email VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
     message TEXT,
+    reply TEXT,
     status VARCHAR(50) DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
