@@ -1,43 +1,62 @@
-
 const express = require('express');
 const router = express.Router();
-const { isAuthenticated, isAdmin } = require('../middleware/auth');
+const { isAuthenticated, isEditor } = require('../middleware/auth');
 
-// Get all settings
+// Get all settings (or by category)
 router.get('/', async (req, res) => {
   try {
     const db = req.db;
     
-    // Get published settings only for public, all for authenticated users
-    let query = 'SELECT * FROM settings WHERE is_published = 1';
+    let query = `
+      SELECT setting_id, name, value, type, category, description, is_published
+      FROM settings
+    `;
     
-    // If authenticated, return all settings
-    if (req.user) {
-      query = 'SELECT * FROM settings';
-    }
+    const params = [];
     
-    // Filter by category if provided
+    // Filter by category if specified
     if (req.query.category) {
-      query += ' AND category = ?';
+      query += ` WHERE category = ?`;
+      params.push(req.query.category);
     }
     
-    // Execute query
-    const queryParams = req.query.category ? [req.query.category] : [];
-    const [settings] = await db.query(query, queryParams);
+    // Filter by published status if specified
+    if (req.query.published === 'true') {
+      query += query.includes('WHERE') ? ` AND is_published = TRUE` : ` WHERE is_published = TRUE`;
+    }
     
-    // Convert to key-value format
-    const formattedSettings = settings.reduce((acc, setting) => {
-      acc[setting.name] = {
-        value: setting.value,
-        type: setting.type,
-        category: setting.category,
-        description: setting.description,
-        is_published: setting.is_published
-      };
-      return acc;
-    }, {});
+    // Add ordering
+    query += ` ORDER BY category, name`;
     
-    res.json({ settings: formattedSettings });
+    const [settings] = await db.query(query, params);
+    
+    // Group settings by category for easier frontend use
+    const groupedSettings = {};
+    
+    settings.forEach(setting => {
+      const category = setting.category || 'general';
+      
+      if (!groupedSettings[category]) {
+        groupedSettings[category] = [];
+      }
+      
+      // Convert value to appropriate type
+      if (setting.type === 'number') {
+        setting.value = parseFloat(setting.value);
+      } else if (setting.type === 'boolean') {
+        setting.value = setting.value === 'true';
+      } else if (setting.type === 'json') {
+        try {
+          setting.value = JSON.parse(setting.value);
+        } catch (e) {
+          // Keep as string if parsing fails
+        }
+      }
+      
+      groupedSettings[category].push(setting);
+    });
+    
+    res.json({ settings: groupedSettings });
     
   } catch (error) {
     console.error('Error fetching settings:', error);
@@ -45,90 +64,41 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Update settings (admin only)
-router.put('/', isAuthenticated, isAdmin, async (req, res) => {
-  const { settings } = req.body;
-  
-  if (!settings || typeof settings !== 'object') {
-    return res.status(400).json({ error: true, message: 'Settings object is required' });
-  }
-  
-  try {
-    const db = req.db;
-    const connection = await db.getConnection();
-    await connection.beginTransaction();
-    
-    try {
-      // Process each setting
-      for (const [name, settingData] of Object.entries(settings)) {
-        const { value, type, category, description, is_published } = settingData;
-        
-        // Check if setting exists
-        const [existingSettings] = await connection.query(
-          'SELECT * FROM settings WHERE name = ?',
-          [name]
-        );
-        
-        if (existingSettings.length > 0) {
-          // Update existing setting
-          await connection.query(
-            `UPDATE settings 
-             SET value = ?, type = ?, category = ?, description = ?, is_published = ?
-             WHERE name = ?`,
-            [value, type, category, description, is_published, name]
-          );
-        } else {
-          // Create new setting
-          await connection.query(
-            `INSERT INTO settings 
-             (setting_id, name, value, type, category, description, is_published)
-             VALUES (UUID(), ?, ?, ?, ?, ?, ?)`,
-            [name, value, type, category, description, is_published]
-          );
-        }
-      }
-      
-      await connection.commit();
-      
-      res.json({
-        success: true,
-        message: 'Settings updated successfully'
-      });
-      
-    } catch (error) {
-      await connection.rollback();
-      throw error;
-    } finally {
-      connection.release();
-    }
-    
-  } catch (error) {
-    console.error('Error updating settings:', error);
-    res.status(500).json({ error: true, message: 'Server error updating settings' });
-  }
-});
-
-// Get a specific setting by name
-router.get('/:name', async (req, res) => {
+// Get setting by name
+router.get('/name/:name', async (req, res) => {
   try {
     const db = req.db;
     const name = req.params.name;
     
-    // Get setting
-    let query = 'SELECT * FROM settings WHERE name = ? AND is_published = 1';
-    
-    // If authenticated, don't filter by published status
-    if (req.user) {
-      query = 'SELECT * FROM settings WHERE name = ?';
-    }
-    
-    const [settings] = await db.query(query, [name]);
+    // Get setting by name
+    const [settings] = await db.query(
+      `SELECT setting_id, name, value, type, category, description, is_published
+       FROM settings 
+       WHERE name = ?
+       ${req.query.published === 'true' ? 'AND is_published = TRUE' : ''}`,
+      [name]
+    );
     
     if (settings.length === 0) {
       return res.status(404).json({ error: true, message: 'Setting not found' });
     }
     
-    res.json({ setting: settings[0] });
+    const setting = settings[0];
+    
+    // Convert value to appropriate type
+    if (setting.type === 'number') {
+      setting.value = parseFloat(setting.value);
+    } else if (setting.type === 'boolean') {
+      setting.value = setting.value === 'true';
+    } else if (setting.type === 'json') {
+      try {
+        setting.value = JSON.parse(setting.value);
+      } catch (e) {
+        // Keep as string if parsing fails
+      }
+    }
+    
+    res.json({ setting });
     
   } catch (error) {
     console.error('Error fetching setting:', error);
@@ -136,14 +106,138 @@ router.get('/:name', async (req, res) => {
   }
 });
 
-// Delete a setting (admin only)
-router.delete('/:name', isAuthenticated, isAdmin, async (req, res) => {
+// Create setting (editor or admin only)
+router.post('/', isAuthenticated, isEditor, async (req, res) => {
   try {
     const db = req.db;
-    const name = req.params.name;
+    const { name, value, type, category, description, is_published } = req.body;
+    
+    if (!name || value === undefined || !type) {
+      return res.status(400).json({ error: true, message: 'Name, value, and type are required' });
+    }
+    
+    // Check if name exists
+    const [existingSettings] = await db.query(
+      'SELECT setting_id FROM settings WHERE name = ?',
+      [name]
+    );
+    
+    if (existingSettings.length > 0) {
+      return res.status(400).json({ error: true, message: 'Setting name already exists' });
+    }
+    
+    // Convert value to string for storage
+    let stringValue;
+    
+    if (typeof value === 'object') {
+      stringValue = JSON.stringify(value);
+    } else {
+      stringValue = String(value);
+    }
+    
+    // Insert setting
+    const settingId = require('uuid').v4();
+    
+    await db.query(
+      `INSERT INTO settings 
+       (setting_id, name, value, type, category, description, is_published)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [settingId, name, stringValue, type, category, description, is_published]
+    );
+    
+    res.status(201).json({
+      success: true,
+      message: 'Setting created successfully',
+      setting_id: settingId
+    });
+    
+  } catch (error) {
+    console.error('Error creating setting:', error);
+    res.status(500).json({ error: true, message: 'Server error creating setting' });
+  }
+});
+
+// Update setting (editor or admin only)
+router.put('/:settingId', isAuthenticated, isEditor, async (req, res) => {
+  try {
+    const db = req.db;
+    const settingId = req.params.settingId;
+    const { value, type, category, description, is_published } = req.body;
+    
+    // Verify setting exists
+    const [existingSettings] = await db.query(
+      'SELECT * FROM settings WHERE setting_id = ?',
+      [settingId]
+    );
+    
+    if (existingSettings.length === 0) {
+      return res.status(404).json({ error: true, message: 'Setting not found' });
+    }
+    
+    // Convert value to string for storage if provided
+    let stringValue;
+    
+    if (value !== undefined) {
+      if (typeof value === 'object') {
+        stringValue = JSON.stringify(value);
+      } else {
+        stringValue = String(value);
+      }
+    }
+    
+    // Update setting
+    let query = 'UPDATE settings SET updated_at = NOW()';
+    const params = [];
+    
+    if (value !== undefined) {
+      query += ', value = ?';
+      params.push(stringValue);
+    }
+    
+    if (type) {
+      query += ', type = ?';
+      params.push(type);
+    }
+    
+    if (category !== undefined) {
+      query += ', category = ?';
+      params.push(category);
+    }
+    
+    if (description !== undefined) {
+      query += ', description = ?';
+      params.push(description);
+    }
+    
+    if (is_published !== undefined) {
+      query += ', is_published = ?';
+      params.push(is_published);
+    }
+    
+    query += ' WHERE setting_id = ?';
+    params.push(settingId);
+    
+    await db.query(query, params);
+    
+    res.json({
+      success: true,
+      message: 'Setting updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error updating setting:', error);
+    res.status(500).json({ error: true, message: 'Server error updating setting' });
+  }
+});
+
+// Delete setting (editor or admin only)
+router.delete('/:settingId', isAuthenticated, isEditor, async (req, res) => {
+  try {
+    const db = req.db;
+    const settingId = req.params.settingId;
     
     // Delete setting
-    await db.query('DELETE FROM settings WHERE name = ?', [name]);
+    await db.query('DELETE FROM settings WHERE setting_id = ?', [settingId]);
     
     res.json({
       success: true,

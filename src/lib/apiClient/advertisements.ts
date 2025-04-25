@@ -2,15 +2,19 @@
 import { apiRequest } from "./request";
 
 export const advertisementsApi = {
-  getAllAdvertisements: async (activeOnly = false) => apiRequest(`/advertisements?active=${activeOnly}`),
-  getAdvertisementById: async (id: string | number) => apiRequest(`/advertisements/${id}`),
-  createAdvertisement: async (data: any) => apiRequest('/advertisements', {
+  getAllAds: async (publishedOnly = true) => apiRequest(`/advertisements?published=${publishedOnly}`),
+  
+  getAdById: async (adId: string | number) => apiRequest(`/advertisements/${adId}`),
+  
+  createAd: async (adData: any) => apiRequest('/advertisements', {
     method: 'POST',
-    body: JSON.stringify(data)
+    body: JSON.stringify(adData)
   }),
-  updateAdvertisement: async (id: string | number, data: any) => apiRequest(`/advertisements/${id}`, {
+  
+  updateAd: async (adId: string | number, adData: any) => apiRequest(`/advertisements/${adId}`, {
     method: 'PUT',
-    body: JSON.stringify(data)
+    body: JSON.stringify(adData)
   }),
-  deleteAdvertisement: async (id: string | number) => apiRequest(`/advertisements/${id}`, { method: 'DELETE' }),
+  
+  deleteAd: async (adId: string | number) => apiRequest(`/advertisements/${adId}`, { method: 'DELETE' }),
 };

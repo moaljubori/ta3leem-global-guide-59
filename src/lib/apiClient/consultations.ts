@@ -2,23 +2,36 @@
 import { apiRequest } from "./request";
 
 export const consultationsApi = {
-  getAllConsultations: async () => apiRequest('/consultations'),
+  getAllConsultations: async (options?: { 
+    status?: string; 
+    email?: string;
+    page?: number; 
+    limit?: number;
+  }) => {
+    // Build query string
+    const queryParams = new URLSearchParams();
+    if (options?.status) queryParams.append('status', options.status);
+    if (options?.email) queryParams.append('email', options.email);
+    if (options?.page) queryParams.append('page', options.page.toString());
+    if (options?.limit) queryParams.append('limit', options.limit.toString());
+    
+    const queryString = queryParams.toString();
+    return apiRequest(`/consultations${queryString ? `?${queryString}` : ''}`);
+  },
+  
   getConsultationById: async (id: string | number) => apiRequest(`/consultations/${id}`),
+  
   createConsultation: async (consultationData: any) => apiRequest('/consultations', {
     method: 'POST',
     body: JSON.stringify(consultationData)
   }),
-  updateConsultation: async (id: string | number, consultationData: any) => apiRequest(`/consultations/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(consultationData)
-  }),
-  updateConsultationStatus: async (id: string | number, statusData: any) => apiRequest(`/consultations/${id}/status`, {
-    method: 'PATCH',
-    body: JSON.stringify(statusData)
-  }),
-  replyToConsultation: async (id: string | number, replyData: any) => apiRequest(`/consultations/${id}/reply`, {
-    method: 'POST',
-    body: JSON.stringify(replyData)
-  }),
-  deleteConsultation: async (id: string | number) => apiRequest(`/consultations/${id}`, { method: 'DELETE' }),
+  
+  updateConsultation: async (id: string | number, data: { status: string; reply?: string }) => 
+    apiRequest(`/consultations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    }),
+  
+  deleteConsultation: async (id: string | number) => 
+    apiRequest(`/consultations/${id}`, { method: 'DELETE' }),
 };

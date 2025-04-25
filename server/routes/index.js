@@ -1,24 +1,28 @@
 
 const authRoutes = require('./auth');
-const pagesRoutes = require('./pages');
-const mediaRoutes = require('./media');
 const usersRoutes = require('./users');
-const advertisementsRoutes = require('./advertisements');
-const consultationsRoutes = require('./consultations');
-const settingsRoutes = require('./settings');
 const blogRoutes = require('./blog');
-const customCodeRoutes = require('./custom-code');
+const mediaRoutes = require('./media');
+const pagesRoutes = require('./pages');
+const countriesRoutes = require('./countries');
+const servicesRoutes = require('./services');
+const settingsRoutes = require('./settings');
+const consultationsRoutes = require('./consultations');
 
+/**
+ * Register all API routes
+ * @param {Express} app - Express application
+ */
 function registerRoutes(app) {
   app.use('/api/auth', authRoutes);
-  app.use('/api/pages', pagesRoutes);
-  app.use('/api/media', mediaRoutes);
   app.use('/api/users', usersRoutes);
-  app.use('/api/advertisements', advertisementsRoutes);
-  app.use('/api/consultations', consultationsRoutes);
-  app.use('/api/settings', settingsRoutes);
   app.use('/api/blog', blogRoutes);
-  app.use('/api/custom-code', customCodeRoutes);
+  app.use('/api/media', mediaRoutes);
+  app.use('/api/pages', pagesRoutes);
+  app.use('/api/countries', countriesRoutes);
+  app.use('/api/services', servicesRoutes);
+  app.use('/api/settings', settingsRoutes);
+  app.use('/api/consultations', consultationsRoutes);
 }
 
 module.exports = registerRoutes;

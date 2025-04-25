@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure uploads directory exists
+// Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -11,55 +11,52 @@ if (!fs.existsSync(uploadDir)) {
 
 // Configure storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Determine destination based on file type
-    let dest = uploadDir;
-    
-    if (file.mimetype.startsWith('image/')) {
-      dest = path.join(uploadDir, 'images');
-    } else if (file.mimetype.startsWith('video/')) {
-      dest = path.join(uploadDir, 'videos');
-    } else {
-      dest = path.join(uploadDir, 'documents');
-    }
-    
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(dest)) {
-      fs.mkdirSync(dest, { recursive: true });
-    }
-    
-    cb(null, dest);
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
   },
-  filename: (req, file, cb) => {
-    // Create unique filename: timestamp-originalname
+  filename: function (req, file, cb) {
+    // Generate unique filename with original extension
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
   }
 });
 
-// File filter to allow only certain types
+// Configure file filter
 const fileFilter = (req, file, cb) => {
-  // Allow images, videos, PDFs, and common document types
+  // Accept common file types
   const allowedMimes = [
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-    'video/mp4', 'video/webm',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/svg+xml',
+    'image/webp',
     'application/pdf',
-    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain',
+    'text/csv',
+    'video/mp4',
+    'video/webm',
+    'audio/mpeg',
+    'audio/wav'
   ];
-  
+
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type'), false);
+    cb(new Error('Invalid file type. Only certain file types are allowed.'), false);
   }
 };
 
-// Create uploader with file size limits
+// Create upload middleware with limits
 const upload = multer({
-  storage,
-  fileFilter,
+  storage: storage,
+  fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: process.env.MAX_FILE_SIZE || 10485760, // 10MB default
   }
 });
 

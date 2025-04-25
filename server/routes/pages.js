@@ -4,33 +4,31 @@ const router = express.Router();
 const { isAuthenticated, isEditor } = require('../middleware/auth');
 
 // Get all pages
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const db = req.db;
     
-    // Get published pages by default or all pages for admin/editor
+    // Build query with filters
     let query = `
-      SELECT DISTINCT p.page_id, p.url, p.title, p.meta_description, 
-             p.parent_id, p.order, p.is_published, MAX(p.version) as latest_version
+      SELECT p.*, COUNT(pv.page_version_id) as version_count 
       FROM pages p
-      GROUP BY p.page_id
-      ORDER BY p.order ASC
+      LEFT JOIN page_versions pv ON p.page_id = pv.page_id
     `;
     
-    if (req.query.published === 'true' && (!req.user || (req.user.role !== 'admin' && req.user.role !== 'editor'))) {
-      query = `
-        SELECT DISTINCT p.page_id, p.url, p.title, p.meta_description, 
-               p.parent_id, p.order, p.is_published, MAX(p.version) as latest_version
-        FROM pages p
-        WHERE p.is_published = true
-        GROUP BY p.page_id
-        ORDER BY p.order ASC
-      `;
+    // Filter by published status if specified
+    if (req.query.published === 'true') {
+      query += ` WHERE p.is_published = TRUE`;
     }
     
+    // Group by page_id to count versions
+    query += ` GROUP BY p.page_id`;
+    
+    // Add ordering
+    query += ` ORDER BY p.url ASC`;
+    
+    // Execute query
     const [pages] = await db.query(query);
     
-    // Return pages
     res.json({ pages });
     
   } catch (error) {
@@ -39,37 +37,22 @@ router.get('/', isAuthenticated, async (req, res) => {
   }
 });
 
-// Get page by ID
-router.get('/:pageId', isAuthenticated, async (req, res) => {
+// Get page by URL (public endpoint)
+router.get('/url/:url', async (req, res) => {
   try {
     const db = req.db;
-    const pageId = req.params.pageId;
-    const version = req.query.version || null;
+    let url = req.params.url;
     
-    // Construct query based on version
-    let pageQuery;
-    let pageParams;
-    
-    if (version) {
-      pageQuery = `
-        SELECT p.*, pv.page_version_id 
-        FROM pages p
-        JOIN page_versions pv ON p.page_id = pv.page_id
-        WHERE p.page_id = ? AND p.version = ?
-      `;
-      pageParams = [pageId, version];
-    } else {
-      pageQuery = `
-        SELECT p.*, pv.page_version_id 
-        FROM pages p
-        JOIN page_versions pv ON p.page_id = pv.page_id
-        WHERE p.page_id = ?
-        ORDER BY p.version DESC LIMIT 1
-      `;
-      pageParams = [pageId];
+    // Ensure URL starts with '/'
+    if (!url.startsWith('/')) {
+      url = '/' + url;
     }
     
-    const [pages] = await db.query(pageQuery, pageParams);
+    // Get page
+    const [pages] = await db.query(
+      `SELECT p.* FROM pages p WHERE p.url = ? AND p.is_published = TRUE`,
+      [url]
+    );
     
     if (pages.length === 0) {
       return res.status(404).json({ error: true, message: 'Page not found' });
@@ -77,119 +60,184 @@ router.get('/:pageId', isAuthenticated, async (req, res) => {
     
     const page = pages[0];
     
-    // Get sections for this page version
-    const [sections] = await db.query(
-      `SELECT s.* 
-       FROM sections s
-       WHERE s.page_version_id = ?
-       ORDER BY s.order ASC`,
-      [page.page_version_id]
+    // Get latest version
+    const [versions] = await db.query(
+      `SELECT pv.* FROM page_versions pv 
+       WHERE pv.page_id = ? 
+       ORDER BY pv.version DESC LIMIT 1`,
+      [page.page_id]
     );
     
-    // For each section, get associated media
-    for (const section of sections) {
-      const [media] = await db.query(
-        `SELECT m.* 
-         FROM media_files m
-         JOIN section_media sm ON m.file_version_id = sm.file_version_id
-         WHERE sm.section_version_id = ?`,
-        [section.section_version_id]
-      );
-      
-      section.media = media;
+    if (versions.length === 0) {
+      return res.status(404).json({ error: true, message: 'Page version not found' });
     }
     
-    // Return page with sections
-    res.json({
-      page: {
-        ...page,
-        sections
-      }
-    });
+    const version = versions[0];
+    
+    // Get sections for this version
+    const [sections] = await db.query(
+      `SELECT s.* FROM sections s
+       WHERE s.page_version_id = ? AND s.is_published = TRUE
+       ORDER BY s.order ASC`,
+      [version.page_version_id]
+    );
+    
+    // Add sections to response
+    page.sections = sections;
+    
+    // Get media for each section
+    for (let i = 0; i < sections.length; i++) {
+      const [media] = await db.query(
+        `SELECT m.* FROM media_files m
+         JOIN section_media sm ON m.file_version_id = sm.file_version_id
+         WHERE sm.section_version_id = ?`,
+        [sections[i].section_version_id]
+      );
+      
+      page.sections[i].media = media;
+    }
+    
+    res.json({ page });
     
   } catch (error) {
-    console.error('Error fetching page:', error);
+    console.error('Error fetching page by URL:', error);
     res.status(500).json({ error: true, message: 'Server error fetching page' });
   }
 });
 
-// Create a new page (editor or admin only)
-router.post('/', isAuthenticated, isEditor, async (req, res) => {
-  const { title, url, meta_description, meta_keywords, parent_id, order, is_published, sections } = req.body;
-  
-  // Validation
-  if (!title || !url) {
-    return res.status(400).json({ error: true, message: 'Title and URL are required' });
-  }
-  
+// Get page by ID (auth required)
+router.get('/:pageId', isAuthenticated, async (req, res) => {
   try {
     const db = req.db;
+    const pageId = req.params.pageId;
     
-    // Start a transaction
+    // Get page
+    const [pages] = await db.query(
+      `SELECT p.* FROM pages p WHERE p.page_id = ?`,
+      [pageId]
+    );
+    
+    if (pages.length === 0) {
+      return res.status(404).json({ error: true, message: 'Page not found' });
+    }
+    
+    const page = pages[0];
+    
+    // Get versions
+    const [versions] = await db.query(
+      `SELECT pv.* FROM page_versions pv 
+       WHERE pv.page_id = ? 
+       ORDER BY pv.version DESC`,
+      [page.page_id]
+    );
+    
+    page.versions = versions;
+    
+    // Get sections for latest version if available
+    if (versions.length > 0) {
+      const latestVersion = versions[0];
+      
+      const [sections] = await db.query(
+        `SELECT s.* FROM sections s
+         WHERE s.page_version_id = ?
+         ORDER BY s.order ASC`,
+        [latestVersion.page_version_id]
+      );
+      
+      // Add sections to response
+      page.sections = sections;
+      
+      // Get media for each section
+      for (let i = 0; i < sections.length; i++) {
+        const [media] = await db.query(
+          `SELECT m.* FROM media_files m
+           JOIN section_media sm ON m.file_version_id = sm.file_version_id
+           WHERE sm.section_version_id = ?`,
+          [sections[i].section_version_id]
+        );
+        
+        page.sections[i].media = media;
+      }
+    }
+    
+    res.json({ page });
+    
+  } catch (error) {
+    console.error('Error fetching page by ID:', error);
+    res.status(500).json({ error: true, message: 'Server error fetching page' });
+  }
+});
+
+// Create page (editor or admin only)
+router.post('/', isAuthenticated, isEditor, async (req, res) => {
+  try {
+    const db = req.db;
+    const { url, title, meta_description, parent_id, order, meta_keywords, is_published, sections } = req.body;
+    
+    if (!url || !title) {
+      return res.status(400).json({ error: true, message: 'URL and title are required' });
+    }
+    
+    // Check if URL exists
+    const [existingPages] = await db.query(
+      'SELECT page_id FROM pages WHERE url = ?',
+      [url]
+    );
+    
+    if (existingPages.length > 0) {
+      return res.status(400).json({ error: true, message: 'URL already exists' });
+    }
+    
     const connection = await db.getConnection();
     await connection.beginTransaction();
     
     try {
-      // Check if URL is already used
-      const [existingPages] = await connection.query(
-        'SELECT * FROM pages WHERE url = ? LIMIT 1',
-        [url]
-      );
-      
-      if (existingPages.length > 0) {
-        await connection.rollback();
-        return res.status(409).json({ error: true, message: 'URL is already in use' });
-      }
-      
-      // Insert page record
+      // Insert page
       const [pageResult] = await connection.query(
         `INSERT INTO pages 
-         (url, title, meta_description, meta_keywords, parent_id, order, is_published, version)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-        [url, title, meta_description, meta_keywords, parent_id, order, is_published || false, 1]
+         (url, title, meta_description, parent_id, \`order\`, meta_keywords, is_published)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [url, title, meta_description, parent_id, order, meta_keywords, is_published]
       );
       
       const pageId = pageResult.insertId;
       
-      // Create page version
-      const [pageVersionResult] = await connection.query(
-        `INSERT INTO page_versions (page_id) VALUES (?)`,
+      // Create initial version
+      const [versionResult] = await connection.query(
+        'INSERT INTO page_versions (page_id, version) VALUES (?, 1)',
         [pageId]
       );
       
-      const pageVersionId = pageVersionResult.insertId;
+      const versionId = versionResult.insertId;
       
-      // Insert sections if provided
-      if (sections && Array.isArray(sections)) {
+      // Add sections if provided
+      if (sections && sections.length > 0) {
         for (let i = 0; i < sections.length; i++) {
           const section = sections[i];
+          const sectionId = require('uuid').v4();
           
           // Insert section
           const [sectionResult] = await connection.query(
             `INSERT INTO sections 
-             (section_id, page_version_id, type, name, content, order, is_published)
-             VALUES (UUID(), ?, ?, ?, ?, ?, ?)`,
-            [pageVersionId, section.type, section.name, section.content, i, is_published || false]
+             (section_id, page_version_id, type, name, content, \`order\`, is_published)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [sectionId, versionId, section.type, section.name, section.content, i + 1, is_published]
           );
           
-          const sectionVersionId = sectionResult.insertId;
-          
-          // Handle section media if any
-          if (section.media && Array.isArray(section.media)) {
-            for (const mediaId of section.media) {
-              await connection.query(
-                `INSERT INTO section_media (section_version_id, file_version_id) VALUES (?, ?)`,
-                [sectionVersionId, mediaId]
-              );
-            }
+          // Add media relations if provided
+          if (section.media && section.media.length > 0) {
+            const mediaValues = section.media.map(mediaId => [sectionResult.insertId, mediaId]);
+            
+            await connection.query(
+              `INSERT INTO section_media (section_version_id, file_version_id) VALUES ?`,
+              [mediaValues]
+            );
           }
         }
       }
       
-      // Commit transaction
       await connection.commit();
       
-      // Return success response
       res.status(201).json({
         success: true,
         message: 'Page created successfully',
@@ -197,7 +245,6 @@ router.post('/', isAuthenticated, isEditor, async (req, res) => {
       });
       
     } catch (error) {
-      // Rollback on error
       await connection.rollback();
       throw error;
     } finally {
@@ -210,119 +257,139 @@ router.post('/', isAuthenticated, isEditor, async (req, res) => {
   }
 });
 
-// Update a page (editor or admin only)
+// Update page (editor or admin only)
 router.put('/:pageId', isAuthenticated, isEditor, async (req, res) => {
-  const pageId = req.params.pageId;
-  const { title, url, meta_description, meta_keywords, parent_id, order, is_published, sections } = req.body;
-  
   try {
     const db = req.db;
+    const pageId = req.params.pageId;
+    const { url, title, meta_description, parent_id, order, 
+            meta_keywords, is_published, sections } = req.body;
     
-    // Start a transaction
+    // Verify page exists
+    const [existingPages] = await db.query(
+      'SELECT * FROM pages WHERE page_id = ?',
+      [pageId]
+    );
+    
+    if (existingPages.length === 0) {
+      return res.status(404).json({ error: true, message: 'Page not found' });
+    }
+    
+    // Check if URL exists (if changed)
+    if (url && url !== existingPages[0].url) {
+      const [existingUrls] = await db.query(
+        'SELECT page_id FROM pages WHERE url = ? AND page_id <> ?',
+        [url, pageId]
+      );
+      
+      if (existingUrls.length > 0) {
+        return res.status(400).json({ error: true, message: 'URL already exists' });
+      }
+    }
+    
     const connection = await db.getConnection();
     await connection.beginTransaction();
     
     try {
-      // Get current page version
-      const [currentVersions] = await connection.query(
-        'SELECT MAX(version) as current_version FROM pages WHERE page_id = ?',
-        [pageId]
-      );
+      // Update page
+      let query = 'UPDATE pages SET updated_at = NOW()';
+      const params = [];
       
-      if (currentVersions.length === 0 || !currentVersions[0].current_version) {
-        await connection.rollback();
-        return res.status(404).json({ error: true, message: 'Page not found' });
-      }
-      
-      const newVersion = currentVersions[0].current_version + 1;
-      
-      // Check if URL is already used by a different page
       if (url) {
-        const [existingPages] = await connection.query(
-          'SELECT * FROM pages WHERE url = ? AND page_id != ? LIMIT 1',
-          [url, pageId]
-        );
-        
-        if (existingPages.length > 0) {
-          await connection.rollback();
-          return res.status(409).json({ error: true, message: 'URL is already in use by another page' });
-        }
+        query += ', url = ?';
+        params.push(url);
       }
       
-      // Insert new version of the page
-      await connection.query(
-        `INSERT INTO pages 
-         (page_id, url, title, meta_description, meta_keywords, parent_id, order, is_published, version)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          pageId, 
-          url, 
-          title, 
-          meta_description, 
-          meta_keywords, 
-          parent_id, 
-          order, 
-          is_published || false, 
-          newVersion
-        ]
-      );
+      if (title) {
+        query += ', title = ?';
+        params.push(title);
+      }
       
-      // Create page version
-      const [pageVersionResult] = await connection.query(
-        `INSERT INTO page_versions (page_id) VALUES (?)`,
+      if (meta_description !== undefined) {
+        query += ', meta_description = ?';
+        params.push(meta_description);
+      }
+      
+      if (parent_id !== undefined) {
+        query += ', parent_id = ?';
+        params.push(parent_id);
+      }
+      
+      if (order !== undefined) {
+        query += ', `order` = ?';
+        params.push(order);
+      }
+      
+      if (meta_keywords !== undefined) {
+        query += ', meta_keywords = ?';
+        params.push(meta_keywords);
+      }
+      
+      if (is_published !== undefined) {
+        query += ', is_published = ?';
+        params.push(is_published);
+      }
+      
+      // Increment version
+      query += ', version = version + 1';
+      
+      query += ' WHERE page_id = ?';
+      params.push(pageId);
+      
+      await connection.query(query, params);
+      
+      // Get current version number
+      const [versionInfo] = await connection.query(
+        'SELECT version FROM pages WHERE page_id = ?',
         [pageId]
       );
       
-      const pageVersionId = pageVersionResult.insertId;
+      const currentVersion = versionInfo[0].version;
       
-      // Insert sections if provided
-      if (sections && Array.isArray(sections)) {
+      // Create new version
+      const [versionResult] = await connection.query(
+        'INSERT INTO page_versions (page_id, version) VALUES (?, ?)',
+        [pageId, currentVersion]
+      );
+      
+      const versionId = versionResult.insertId;
+      
+      // Add sections if provided
+      if (sections && sections.length > 0) {
         for (let i = 0; i < sections.length; i++) {
           const section = sections[i];
+          const sectionId = section.section_id || require('uuid').v4();
           
           // Insert section
           const [sectionResult] = await connection.query(
             `INSERT INTO sections 
-             (section_id, page_version_id, type, name, content, order, is_published)
+             (section_id, page_version_id, type, name, content, \`order\`, is_published)
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [
-              section.id || `section-${Date.now()}-${i}`, 
-              pageVersionId, 
-              section.type, 
-              section.name, 
-              section.content, 
-              i, 
-              section.is_published || is_published || false
-            ]
+            [sectionId, versionId, section.type, section.name, 
+             section.content, i + 1, is_published]
           );
           
-          const sectionVersionId = sectionResult.insertId;
-          
-          // Handle section media if any
-          if (section.media && Array.isArray(section.media)) {
-            for (const mediaId of section.media) {
-              await connection.query(
-                `INSERT INTO section_media (section_version_id, file_version_id) VALUES (?, ?)`,
-                [sectionVersionId, mediaId]
-              );
-            }
+          // Add media relations if provided
+          if (section.media && section.media.length > 0) {
+            const mediaValues = section.media.map(mediaId => [sectionResult.insertId, mediaId]);
+            
+            await connection.query(
+              `INSERT INTO section_media (section_version_id, file_version_id) VALUES ?`,
+              [mediaValues]
+            );
           }
         }
       }
       
-      // Commit transaction
       await connection.commit();
       
-      // Return success response
       res.json({
         success: true,
         message: 'Page updated successfully',
-        page_id: pageId,
-        version: newVersion
+        version: currentVersion
       });
       
     } catch (error) {
-      // Rollback on error
       await connection.rollback();
       throw error;
     } finally {
@@ -335,17 +402,16 @@ router.put('/:pageId', isAuthenticated, isEditor, async (req, res) => {
   }
 });
 
-// Publish or unpublish a page
+// Publish/unpublish a page
 router.patch('/:pageId/publish', isAuthenticated, isEditor, async (req, res) => {
-  const pageId = req.params.pageId;
-  const { is_published } = req.body;
-  
-  if (typeof is_published !== 'boolean') {
-    return res.status(400).json({ error: true, message: 'is_published boolean value is required' });
-  }
-  
   try {
     const db = req.db;
+    const pageId = req.params.pageId;
+    const { is_published } = req.body;
+    
+    if (is_published === undefined) {
+      return res.status(400).json({ error: true, message: 'Publish status is required' });
+    }
     
     // Update page publish status
     await db.query(
@@ -355,23 +421,32 @@ router.patch('/:pageId/publish', isAuthenticated, isEditor, async (req, res) => 
     
     res.json({
       success: true,
-      message: is_published ? 'Page published successfully' : 'Page unpublished successfully'
+      message: `Page ${is_published ? 'published' : 'unpublished'} successfully`
     });
     
   } catch (error) {
     console.error('Error updating page publish status:', error);
-    res.status(500).json({ error: true, message: 'Server error updating page publish status' });
+    res.status(500).json({ error: true, message: 'Server error updating publish status' });
   }
 });
 
-// Delete a page
+// Delete page (editor or admin only)
 router.delete('/:pageId', isAuthenticated, isEditor, async (req, res) => {
-  const pageId = req.params.pageId;
-  
   try {
     const db = req.db;
+    const pageId = req.params.pageId;
     
-    // Delete page (cascade will handle related records)
+    // Verify page exists
+    const [existingPages] = await db.query(
+      'SELECT * FROM pages WHERE page_id = ?',
+      [pageId]
+    );
+    
+    if (existingPages.length === 0) {
+      return res.status(404).json({ error: true, message: 'Page not found' });
+    }
+    
+    // Delete page (cascades to versions and sections)
     await db.query('DELETE FROM pages WHERE page_id = ?', [pageId]);
     
     res.json({

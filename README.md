@@ -1,73 +1,123 @@
-# Welcome to your Lovable project
 
-## Project info
+# Website Content Management System
 
-**URL**: https://lovable.dev/projects/7895975b-7a67-4e6d-b6ef-0edef0f43eb3
+A complete CMS solution designed for deployment on cPanel hosting environments. This application provides a full-featured admin panel to manage your website content, blog posts, media, and more using MySQL for data storage.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+### Backend
 
-**Use Lovable**
+- **MySQL Database**: Complete schema for all website content.
+- **RESTful APIs**: Secure endpoints for CRUD operations on all content types.
+- **Authentication**: JWT-based authentication and role-based access control.
+- **File Management**: Upload and manage media files directly on your cPanel hosting.
+- **Versioning**: Content versioning for pages and blog posts.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/7895975b-7a67-4e6d-b6ef-0edef0f43eb3) and start prompting.
+### Admin Panel
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Dashboard**: Overview of website statistics and recent activity.
+- **Content Management**: 
+  - Pages: Create/edit/delete website pages
+  - Blog: Full-featured blog management
+  - Media: Upload and organize images and files
+  - Countries and Services: Manage location-specific content
+  - Users: Admin user management
+- **Settings**: Configure website options and preferences
 
-**Use your preferred IDE**
+### Frontend Integration
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Dynamic Content**: All website pages can be rendered from the database.
+- **SEO Management**: Meta titles, descriptions, and custom URLs.
+- **Blog System**: Feature-rich blog with categories and tags.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Tech Stack
 
-Follow these steps:
+- **Backend**: Node.js with Express
+- **Database**: MySQL
+- **Authentication**: JWT with refresh tokens
+- **File Uploads**: Multer for handling file uploads
+- **Frontend Admin**: React with Tailwind CSS
+- **API Client**: Custom axios-based request library
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## Setup and Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Local Development
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. Clone the repository
+2. Create a `.env` file based on `.env.example`
+3. Install dependencies: `npm install`
+4. Set up the database:
+   - Create a MySQL database
+   - Import the migration SQL files
+5. Run the development server: `npm run dev`
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Database Setup
+
+The project includes multiple migration SQL files that create the necessary database structure:
+
+- `migration_admin.sql`: Admin users and notifications tables
+- `migration_pages.sql`: Pages, versions, and sections tables
+- `migration_blog.sql`: Blog posts and categories tables
+- `migration_media.sql`: Media files table
+- `migration_countries_services.sql`: Countries and services tables
+- `migration_settings.sql`: Settings table
+- `migration_users_auth.sql`: User authentication tables
+- `migration_consultations.sql`: Consultation requests table
+- `migration_custom_code.sql`: Custom HTML/CSS/JS code table
+- `migration_ads.sql`: Advertisements table
+
+### Creating an Admin User
+
+Run the admin user creation script:
+
+```bash
+node server/scripts/create-admin-user.js
 ```
 
-**Edit a file directly in GitHub**
+Follow the prompts to create your initial admin account.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## API Routes
 
-**Use GitHub Codespaces**
+The application provides comprehensive API endpoints:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- `/api/auth`: Authentication endpoints (login, refresh token, etc.)
+- `/api/users`: User management
+- `/api/pages`: Page content management
+- `/api/blog`: Blog post management
+- `/api/media`: Media file management
+- `/api/countries`: Country data management
+- `/api/services`: Services management
+- `/api/settings`: System settings
+- `/api/consultations`: Consultation requests
 
-## What technologies are used for this project?
+## Deployment
 
-This project is built with:
+For detailed deployment instructions, please refer to [DEPLOYMENT.md](DEPLOYMENT.md).
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Key Considerations for cPanel
 
-## How can I deploy this project?
+- Database configuration using cPanel MySQL
+- Node.js setup via cPanel's Node.js Selector
+- File permissions and directory structure
+- Domain and subdomain configuration
 
-Simply open [Lovable](https://lovable.dev/projects/7895975b-7a67-4e6d-b6ef-0edef0f43eb3) and click on Share -> Publish.
+## Security
 
-## Can I connect a custom domain to my Lovable project?
+- JWT-based authentication with refresh tokens
+- Password hashing using bcrypt
+- Role-based authorization (admin, editor)
+- Rate limiting for API requests
+- Input validation and sanitization
+- Parameterized SQL queries
 
-Yes it is!
+## Best Practices
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Always back up your database before making significant changes
+- Use the versioning system for content changes
+- Keep your Node.js and npm packages updated
+- Monitor server logs for errors
+- Use strong passwords for admin accounts
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## License
+
+This project is proprietary. All rights reserved.
